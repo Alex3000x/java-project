@@ -1,0 +1,2 @@
+# Scopa
+Italian card game
