@@ -1,8 +1,8 @@
 package com.alessio.scopa;
 
 import java.util.*;
-public class Combinazioni
-{
+public class Combinazioni  {
+    /*
     private ArrayList arrayDentro = new ArrayList();
     private ArrayList ind = new ArrayList();
     private ArrayList combinazione = new ArrayList(0);
@@ -23,7 +23,7 @@ public class Combinazioni
         c.setVisible(false);
         array.remove((int)ind.get(i) - sottr);
         sottr = sottr + (combinazione.size()-1);
-        }*/
+        }
         if(combinazione.isEmpty())
         {}
         else
@@ -100,5 +100,5 @@ public class Combinazioni
             return true;
         else
             return false;
-    }
+    }*/
 }

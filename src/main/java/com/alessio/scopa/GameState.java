@@ -4,11 +4,11 @@ import java.util.ArrayList;
 
 public class GameState {
     // Carte sul tavolo
-    private ArrayList<Carta> carteSulTavolo;
+    private ArrayList<Card> carteSulTavolo;
 
     // Carte in mano ai giocatori
-    private ArrayList<Carta> carteGiocatore;
-    private ArrayList<Carta> carteComputer;
+    private ArrayList<Card> carteGiocatore;
+    private ArrayList<Card> carteComputer;
 
     // Punteggi
     private int punteggioGiocatore;
@@ -28,27 +28,27 @@ public class GameState {
     }
 
     // Getter e Setter
-    public ArrayList<Carta> getCarteSulTavolo() {
+    public ArrayList<Card> getCarteSulTavolo() {
         return carteSulTavolo;
     }
 
-    public void setCarteSulTavolo(ArrayList<Carta> carteSulTavolo) {
+    public void setCarteSulTavolo(ArrayList<Card> carteSulTavolo) {
         this.carteSulTavolo = carteSulTavolo;
     }
 
-    public ArrayList<Carta> getCarteGiocatore() {
+    public ArrayList<Card> getCarteGiocatore() {
         return carteGiocatore;
     }
 
-    public void setCarteGiocatore(ArrayList<Carta> carteGiocatore) {
+    public void setCarteGiocatore(ArrayList<Card> carteGiocatore) {
         this.carteGiocatore = carteGiocatore;
     }
 
-    public ArrayList<Carta> getCarteComputer() {
+    public ArrayList<Card> getCarteComputer() {
         return carteComputer;
     }
 
-    public void setCarteComputer(ArrayList<Carta> carteComputer) {
+    public void setCarteComputer(ArrayList<Card> carteComputer) {
         this.carteComputer = carteComputer;
     }
 
