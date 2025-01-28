@@ -52,14 +52,3 @@ public abstract class Deck {
         return sb.toString();
     }
 }
-
-/*
-// Method for initialize deck with all the 40 neapolitan cards
-private void initializeDeck() {
-    String[] suits = {"Cups", "Coins", "Swords", "Clubs"};
-    for (String suit : suits) {
-        for (int value = 1; value <= 10; value++) {
-            cards.add(new Card(value, suit));
-        }
-    }
-    }*/

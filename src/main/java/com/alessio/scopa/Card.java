@@ -3,14 +3,14 @@ package com.alessio.scopa;
 public class Card {
     private final int value; // Value of the card (1-10)
     private final String suit; // Suit of the card (e.g., Cups, Coins, Swords, Clubs)
-    private final int primiera; // Value for the primiera calculation
+    private final int prime; // Value for the prime calculation
     private boolean scopa; // Indicates if this card is a "scopa"
 
     // Constructor
     public Card(int value, String suit) {
         this.value = value;
         this.suit = suit;
-        this.primiera = calculatePrimiera(value);
+        this.prime = calculatePrime(value);
         this.scopa = false;
     }
 
@@ -23,8 +23,8 @@ public class Card {
         return suit;
     }
 
-    public int getPrimiera() {
-        return primiera;
+    public int getPrime() {
+        return prime;
     }
 
     public boolean isScopa() {
@@ -36,8 +36,8 @@ public class Card {
         this.scopa = scopa;
     }
 
-    // Private method to calculate the primiera value
-    private int calculatePrimiera(int value) {
+    // Private method to calculate the prime value
+    private int calculatePrime(int value) {
         switch (value) {
             case 7: return 21;
             case 6: return 18;
@@ -53,6 +53,7 @@ public class Card {
     // Debug method to print the card
     @Override
     public String toString() {
-        return value + " of " + suit + " (primiera: " + primiera + ")" + (scopa ? " (scopa)" : "");
+        return value + " of " + suit
+        /*+ " (prime: " + prime + ")" + (scopa ? " (scopa)" : "")*/;
     }
 }

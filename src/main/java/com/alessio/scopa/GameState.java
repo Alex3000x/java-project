@@ -3,76 +3,87 @@ package com.alessio.scopa;
 import java.util.ArrayList;
 
 public class GameState {
-    // Carte sul tavolo
-    private ArrayList<Card> carteSulTavolo;
+    // Cards on the table
+    private ArrayList<Card> tableCards;
 
-    // Carte in mano ai giocatori
-    private ArrayList<Card> carteGiocatore;
-    private ArrayList<Card> carteComputer;
+    // Cards in the players' hand
+    private ArrayList<Card> playerCards;
+    private ArrayList<Card> aiCards;
 
-    // Punteggi
-    private int punteggioGiocatore;
-    private int punteggioComputer;
+    // Captured cards by players
+    private ArrayList<Card> playerCapturedCards;
+    private ArrayList<Card> aiCapturedCards;
 
-    // Turno attuale (true= Turno del giocatore, false = turno del computer)
-    private boolean turnoGiocatore;
+    // players scores
+    private int playerScore;
+    private int aiScore;
 
-    // Costruttore
+    // Constructor
     public GameState() {
-        carteSulTavolo = new ArrayList<>();
-        carteGiocatore = new ArrayList<>();
-        carteComputer = new ArrayList<>();
-        punteggioGiocatore = 0;
-        punteggioComputer = 0;
-        turnoGiocatore = true; //inizia il giocatore
+        tableCards = new ArrayList<>();
+        playerCards = new ArrayList<>();
+        aiCards = new ArrayList<>();
+        playerCapturedCards = new ArrayList<>();
+        aiCapturedCards = new ArrayList<>();
+        playerScore = 0;
+        aiScore = 0;
     }
 
-    // Getter e Setter
-    public ArrayList<Card> getCarteSulTavolo() {
-        return carteSulTavolo;
+    public void incrementPlayerScore() {
+        playerScore += 1;
     }
 
-    public void setCarteSulTavolo(ArrayList<Card> carteSulTavolo) {
-        this.carteSulTavolo = carteSulTavolo;
+    public void incrementAiScore() {
+        aiScore += 1;
     }
 
-    public ArrayList<Card> getCarteGiocatore() {
-        return carteGiocatore;
+    // Getter
+    public ArrayList<Card> getTableCards() {
+        return tableCards;
     }
 
-    public void setCarteGiocatore(ArrayList<Card> carteGiocatore) {
-        this.carteGiocatore = carteGiocatore;
+    public ArrayList<Card> getPlayerHand() {
+        return playerCards;
     }
 
-    public ArrayList<Card> getCarteComputer() {
-        return carteComputer;
+    public ArrayList<Card> getAiHand() {
+        return aiCards;
     }
 
-    public void setCarteComputer(ArrayList<Card> carteComputer) {
-        this.carteComputer = carteComputer;
+    public ArrayList<Card> getPlayerCapturedCards() {
+        return playerCapturedCards;
     }
 
-    public int getPunteggioGiocatore() {
-        return punteggioGiocatore;
+    public ArrayList<Card> getAiCapturedCards() {
+        return aiCapturedCards;
     }
 
-    public void setPunteggioGiocatore(int punteggioGiocatore) {
-        this.punteggioGiocatore = punteggioGiocatore;
+    public int getPlayerScore() {
+        return playerScore;
     }
 
-    public int getPunteggioComputer() {
-        return punteggioComputer;
+    public int getAiScore() {
+        return aiScore;
     }
 
-    public void setPunteggioComputer(int punteggioComputer) {
-        this.punteggioComputer = punteggioComputer;
+    // Setter
+    public void setTableCards(ArrayList<Card> cardsOnTable) {
+        tableCards = cardsOnTable;
     }
 
-    public boolean isTurnoGiocatore() {
-        return turnoGiocatore;
+    public void setPlayerHand(ArrayList<Card> playerHand) {
+        playerCards = playerHand;
     }
 
-    public void setTurnoGiocatore(boolean turnoGiocatore) {
-        this.turnoGiocatore = turnoGiocatore;
+    public void setAiHand(ArrayList<Card> aiHand) {
+        aiCards = aiHand;
+    }
+
+    public void setPlayerScore (int newScore) {
+        playerScore = newScore;
+    }
+
+    public void setAiScore (int newScore) {
+        aiScore = newScore;
     }
 }
