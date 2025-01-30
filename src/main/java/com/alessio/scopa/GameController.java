@@ -1,6 +1,8 @@
 package com.alessio.scopa;
 
 import java.util.ArrayList;
+import java.util.Scanner; // Import Scanner for input
+import java.util.concurrent.TimeUnit;
 
 public class GameController
 {
@@ -18,13 +20,19 @@ public class GameController
     // Starts the game
     private void startGame() {
         logStartGame();
+        logAction("Shuffling deck...", 0);
         deck.shuffleDeck(); // Shuffles the deck
-        logAction("Deck successfully shuffled", 0);
+        wait(4);
+        logAction("Dealing 3 cards to the player and to AI...", 0);
         dealCardsToPlayers(); // Deals the 3 cards to player and AI
-        logAction("3 cards dealt to the player and to AI", 0);
+        wait(4);
+        logAction("Dealing 4 cards on the table...", 1);
         dealCardsOnTable(); // Deals the 4 cards on the table
-        logAction("4 cards dealt on the table", 1);
+        wait(2);
+        // Here goes the while until one of them reaches the final score
         playRound();
+        // Outside the while the game ends with final message and choices whether to restart or exit
+        // Maybe even see results, save match...
     }
 
     public void playRound() {
@@ -36,17 +44,16 @@ public class GameController
             logNewline();
             logAction("TABLE: " + gameState.getTableCards(), 0);
             if (isPlayerTurn) {
-                logAction("PLAYER's hand: " + gameState.getPlayerHand(), 0);
-                logMessage("PLAYER", " -What are you going to do?");
-                // Simulate player action with the first card (replace with actual card selection)
-                logMessage("PLAYER", " -You choose to play the " + gameState.getPlayerHand().get(0));
-                playerMove(gameState.getPlayerHand().get(0));
+                Card selectedCard = selectPlayerCard(); // Card selection from player
+                logMessage("PLAYER", "choose to play the " + selectedCard, 1);
+                playerMove(selectedCard);
             } else {
-                log("AI's hand: ");
+                logPrint("►AI's hand: ");
                 logAiHand();
-                logMessage("AI", " -What you going to do?");
+                logMessage("AI", "is thinking what to do...", 1);
+                wait(4);
                 // Simulate AI action with the first card (replace with actual card selection algorithm)
-                logMessage("AI", " -You choose to play the " + gameState.getAiHand().get(0));
+                logMessage("AI", "choose to play the " + gameState.getAiHand().get(0), 1);
                 aiMove(gameState.getAiHand().get(0));
             }
             logNewline();
@@ -56,7 +63,6 @@ public class GameController
             } else {
                 isPlayerTurn = !isPlayerTurn; // Switch to the next turn (player's turn)
             }
-
         }
     }
 
@@ -89,35 +95,30 @@ public class GameController
         gameState.setTableCards(tableCards);
     }
 
-    // Generic move
-    private void performMove(Card selectedCard, ArrayList<Card> playerHand, ArrayList<Card> capturedCards, boolean isPlayer) {
-        ArrayList<Card> tableCards = gameState.getTableCards();
-        ArrayList<ArrayList<Card>> possibleCaptures = findPossibleCaptures(selectedCard, tableCards);
+    private Card selectPlayerCard() {
+        Scanner scanner = new Scanner(System.in);
+        ArrayList<Card> playerHand = gameState.getPlayerHand();
 
-        // Logic to calculate card captures
-        if (!possibleCaptures.isEmpty()) {
-            // For now, choose the first capture (it must add choice for player and logic for AI)
-            ArrayList<Card> selectedCapture = possibleCaptures.get(0);
-            tableCards.removeAll(selectedCapture);
-            playerHand.remove(selectedCard);
-
-            // Add captured cards (the selected one and the others on the table) to the player's pile
-            capturedCards.addAll(selectedCapture);
-            capturedCards.add(selectedCard);
-            logCapture((isPlayer ? "PLAYER" : "AI"), selectedCapture, selectedCard);
-
-            // Check if it's a Scopa
-            if (tableCards.isEmpty()) {
-                logScopa((isPlayer ? "PLAYER" : "AI"));
-                if (isPlayer) gameState.incrementPlayerScore(); // Increment the player's score for the Scopa
-                else gameState.incrementAiScore(); // Increment the AI's score for the Scopa
-            }
-        } else {
-            // If no captures, add the card to the table
-            tableCards.add(selectedCard);
-            playerHand.remove(selectedCard);
-            logMove((isPlayer ? "PLAYER" : "AI"), selectedCard);
+        // Shows available cards in the player's hand
+        logAction("PLAYER's hand:",0);
+        for (int i = 0; i < playerHand.size(); i++) {
+            logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
         }
+
+        // Asks the player which card he wants to play
+        int playerChoice;
+        while (true) {
+            logMessage("PLAYER","-Choose a card to play (1-" + playerHand.size() + "): ", 0);
+            if (scanner.hasNextInt()) {
+                playerChoice = scanner.nextInt();
+                if (playerChoice >= 1 && playerChoice <= playerHand.size()) {
+                    break; // Valid input
+                }
+            }
+            scanner.nextLine(); // Clean the scanner buffer
+            logAction("Invalid choice. Try again.",0);
+        }
+        return playerHand.get(playerChoice - 1);
     }
 
     // Player's move
@@ -128,6 +129,40 @@ public class GameController
     // AI's move
     private void aiMove(Card selectedCard) {
         performMove(selectedCard, gameState.getAiHand(), gameState.getAiCapturedCards(), false);
+    }
+
+    // Generic move
+    private void performMove(Card selectedCard, ArrayList<Card> playerHand, ArrayList<Card> capturedCards, boolean isPlayer) {
+        ArrayList<Card> tableCards = gameState.getTableCards();
+        ArrayList<ArrayList<Card>> possibleCaptures = findPossibleCaptures(selectedCard, tableCards);
+
+        // Logic to calculate card captures
+        if (!possibleCaptures.isEmpty()) {
+            // For now, chooses the first capture (it must add choice for player and logic for AI)
+            ArrayList<Card> selectedCapture = possibleCaptures.get(0);
+            tableCards.removeAll(selectedCapture);
+            playerHand.remove(selectedCard);
+
+            // Adds captured cards (the selected one and the others on the table) to the player's pile
+            capturedCards.addAll(selectedCapture);
+            capturedCards.add(selectedCard);
+            logCapture((isPlayer ? "PLAYER" : "AI"), selectedCapture, selectedCard);
+            wait(2);
+
+            // Check if it's a Scopa
+            if (tableCards.isEmpty()) {
+                logScopa((isPlayer ? "PLAYER" : "AI"));
+                if (isPlayer) gameState.incrementPlayerScore(); // Increment the player's score for the Scopa
+                else gameState.incrementAiScore(); // Increment the AI's score for the Scopa
+                wait(2);
+            }
+        } else {
+            // If no captures, add the card to the table
+            tableCards.add(selectedCard);
+            playerHand.remove(selectedCard);
+            logMove((isPlayer ? "PLAYER" : "AI"), selectedCard);
+            wait(2);
+        }
     }
 
     // Finds all possible captures for the selected card
@@ -162,7 +197,7 @@ public class GameController
                 logNewline();
                 String turnString = "TURN " + turnNumber;
                 logTitle(turnString);
-                log("");
+                logPrint("");
                 logAction("New distribution of cards", 0);
                 dealCardsToPlayers(); // Deals new cards to player and AI
                 return false;
@@ -179,6 +214,7 @@ public class GameController
     private void calculatePoints() {
         // Logic to calculate points (scopa, prime, etc.)
         logAction("Calculating points...", 0);
+        wait(4);
         logAction("Current scores of the players", 0);
         logAction("     Player score: " + gameState.getPlayerScore(), 0);
         logAction("     AI score: " + gameState.getAiScore(), 1);
@@ -187,12 +223,25 @@ public class GameController
 
     // Ends the game
     private void endRound() {
+        wait(2);
         logAction("Round over!", 1);
     }
 
     //----------------------------------------------------------------------------------------
+    // Other methods
+
+    private static void wait(int seconds)
+    {
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------
     // Log methods
-    private void log(String message) {
+    private void logPrint(String message) {
         System.out.print(message);
     }
 
@@ -201,41 +250,42 @@ public class GameController
     }
 
     private void logStartGame() {
-        System.out.println("        *-------------------*");
-        System.out.println("        |   GAME STARTED    |");
-        System.out.println("        *-------------------*");
+        System.out.println("                                        *-------------------*");
+        System.out.println("                                        |   GAME STARTED    |");
+        System.out.println("                                        *-------------------*");
     }
 
     private void logTitle(String message) {
-        System.out.println("[ " + message + " ]");
+        System.out.println("[" + message + "]");
         //for(int i = 0; i < newline; i++) { System.out.println("\n"); }
     }
 
-    private void logAction(String message, int newline) {
+    private void logAction(String message, int newlines) {
         System.out.println("►" + message);
-        for(int i = 0; i < newline; i++) { System.out.println("\n"); }
+        for(int i = 0; i < newlines; i++) { System.out.println("\n"); }
     }
 
-    private void logMessage(String player, String message) {
-        System.out.println(" |" + player + "| " + message);
+    private void logMessage(String player, String message, int newlines) {
+        System.out.print(" |" + player + "|  " + message);
+        for(int i = 0; i < newlines; i++) { System.out.print("\n"); }
     }
 
     private void logCapture(String player, ArrayList<Card> capture, Card card) {
-        System.out.println(" |" + player + "| captured " + capture + " with the " + card);
+        System.out.println(" |" + player + "|  captured " + capture + " with the " + card);
     }
 
     private void logMove(String player, Card card) {
-        System.out.println(" |" + player + "| just placed the " + card + " on the table");
+        System.out.println(" |" + player + "|  just placed the " + card + " on the table");
     }
 
     private void logScopa(String player) {
-        System.out.println(" |" + player + "| made a Scopa! (+1)");
+        System.out.println(" |" + player + "|  made a Scopa! (+1)");
     }
 
     private void logAiHand() {
-        System.out.print("[ ▬");
-        for (int i = 1; i < gameState.getAiHand().size(); i++) { System.out.print(" , ▬"); }
-        System.out.print(" ]\n");
+        System.out.print("[▬");
+        for (int i = 1; i < gameState.getAiHand().size(); i++) { System.out.print(", ▬"); }
+        System.out.print("]\n");
     }
 
     //----------------------------------------------------------------------------------------
