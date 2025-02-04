@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.Scanner; // Import Scanner for input
 import java.util.concurrent.TimeUnit;
 
-public class GameController
-{
+public class GameController {
     private final NeapolitanDeck deck;
     private final GameState gameState; // The state of the game
     private boolean isPlayerTurn; // Indicates if it's the player's turn
@@ -33,37 +32,6 @@ public class GameController
         playRound();
         // Outside the while the game ends with final message and choices whether to restart or exit
         // Maybe even see results, save match...
-    }
-
-    public void playRound() {
-        int turnNumber = 1;
-        String turnString = "TURN " + turnNumber;
-        logTitle(turnString);
-        while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
-            if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) { turnNumber += 1;}
-            logNewline();
-            logAction("TABLE: " + gameState.getTableCards(), 0);
-            if (isPlayerTurn) {
-                Card selectedCard = selectPlayerCard(); // Card selection from player
-                logMessage("PLAYER", "choose to play the " + selectedCard, 1);
-                playerMove(selectedCard);
-            } else {
-                logPrint("►AI's hand: ");
-                logAiHand();
-                logMessage("AI", "is thinking what to do...", 1);
-                wait(4);
-                // Simulate AI action with the first card (replace with actual card selection algorithm)
-                logMessage("AI", "choose to play the " + gameState.getAiHand().get(0), 1);
-                aiMove(gameState.getAiHand().get(0));
-            }
-            logNewline();
-            if(checkRoundEnd(turnNumber)) {
-                calculatePoints(); // Calculate points and reset for the next round
-                endRound();
-            } else {
-                isPlayerTurn = !isPlayerTurn; // Switch to the next turn (player's turn)
-            }
-        }
     }
 
     // Deals the cards (3 to each player)
@@ -95,12 +63,42 @@ public class GameController
         gameState.setTableCards(tableCards);
     }
 
+    public void playRound() {
+        int turnNumber = 1;
+        String turnString = "TURN " + turnNumber;
+        logTitle(turnString);
+        while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
+            if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
+                turnNumber += 1;
+            }
+            logNewline();
+            logAction("TABLE: " + gameState.getTableCards(), 0);
+            if (isPlayerTurn) {
+                Card selectedPlayerCard = selectPlayerCard(); // Card selection from player
+                logMessage("PLAYER", "choose to play the " + selectedPlayerCard, 1);
+                playerMove(selectedPlayerCard);
+            } else {
+                Card selectedAiCard = chooseAiCard(); // Card selection from AI
+                logMessage("AI", "choose to play the " + selectedAiCard, 1);
+                aiMove(selectedAiCard);
+            }
+            logNewline();
+            if (checkRoundEnd(turnNumber)) {
+                calculatePoints(); // Calculate points and reset for the next round
+                endRound();
+            } else {
+                isPlayerTurn = !isPlayerTurn; // Switch to the next turn (player's turn)
+            }
+        }
+    }
+
+    // Card selection from the player
     private Card selectPlayerCard() {
         Scanner scanner = new Scanner(System.in);
         ArrayList<Card> playerHand = gameState.getPlayerHand();
 
         // Shows available cards in the player's hand
-        logAction("PLAYER's hand:",0);
+        logAction("PLAYER's hand:", 0);
         for (int i = 0; i < playerHand.size(); i++) {
             logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
         }
@@ -108,7 +106,7 @@ public class GameController
         // Asks the player which card he wants to play
         int playerChoice;
         while (true) {
-            logMessage("PLAYER","-Choose a card to play (1-" + playerHand.size() + "): ", 0);
+            logMessage("PLAYER", "-Choose a card to play (1-" + playerHand.size() + "): ", 0);
             if (scanner.hasNextInt()) {
                 playerChoice = scanner.nextInt();
                 if (playerChoice >= 1 && playerChoice <= playerHand.size()) {
@@ -116,9 +114,123 @@ public class GameController
                 }
             }
             scanner.nextLine(); // Clean the scanner buffer
-            logAction("Invalid choice. Try again.",0);
+            logAction("Invalid choice. Try again.", 0);
         }
         return playerHand.get(playerChoice - 1);
+    }
+
+    // This would be the best move choice from AI
+    private Card chooseAiCard() {
+        ArrayList<Card> aiHand = gameState.getAiHand();
+        ArrayList<Card> tableCards = gameState.getTableCards();
+
+        // Shows graphically the number of remaining cards in the AI's hand and the waiting message
+        logPrint("►AI's hand: ");
+        logAiHand();
+        logMessage("AI", "is thinking what to do...", 1);
+        wait(4); // To emulate the AI’s thinking time
+
+        Card bestCard = aiHand.get(0); // It's the card will be returned, and it will be updated from time to time [first card to default]
+        ArrayList<Card> bestCapture = new ArrayList<>(); //
+        int bestScore = -1; // A score to evaluate the priority of a move (higher value = better choice)
+
+        // Check each card of the AI and we see which one makes the best capture
+        for (Card aiCard : aiHand) {
+            ArrayList<ArrayList<Card>> captures = findPossibleCaptures(aiCard, tableCards); // All possible captures with each card
+
+            // If a catch is possible with that card, let’s see which capture gives the best result
+            if (!captures.isEmpty()) {
+                for (ArrayList<Card> capture : captures) { // Checks for every possible capture
+                    ArrayList<Card> captureWithAiCard = new ArrayList<>(capture); // Capture that will also include the card being played
+                    captureWithAiCard.add(aiCard); // For some checks, the card that will be played must also to be considered for calculations
+                    int currentScore = 0; // Temporary score to evaluate priority
+
+                    // 1) Points for the Scopa (if it empties the table)
+                    if (capture.size() == tableCards.size()) {
+                        return aiCard; // If it's a scopa, no need to continue searching
+                    }
+
+                    // 2) Points for the capture of the seven of Coins (or "settebello")
+                    for (Card c : captureWithAiCard) {
+                        if ((c.getSuit().equals("Coins")) && (c.getValue() == 7)) {
+                            currentScore += 20; // Gives a high score for the seven of Coins
+                        }
+                    }
+
+                    // 3) Points for the capture of good cards for the prime
+                    for (Card c : captureWithAiCard) {
+                        currentScore += c.getPrime(); // Gives a score based on its value in the prime (higher is better)
+                    }
+
+                    // 4) Points for the capture of Coins cards
+                    for (Card c : captureWithAiCard) {
+                        if (c.getSuit().equals("Coins")) {
+                            currentScore += 10; // Gives a good score for each Coins card earned
+                        }
+                    }
+
+                    // 5) Points for the total number of captured cards
+                    currentScore += capture.size() * 3; // Gives a linear score for each card earned
+
+                    // If this current score is the best found, update the choice
+                    if (currentScore > bestScore) {
+                        bestScore = currentScore; // This current score become the best score
+                        bestCard = aiCard; // So the card for that capture become the best card
+                        bestCapture = capture; // And also the capture become the best capture
+                    }
+                }
+            } else {
+                // If a catch isn't possible, let’s see which card to play is the least dangerous
+                ArrayList<Card> tableCardsWithAiCard = new ArrayList<>(tableCards); // Table cards if the card was just placed on table
+                tableCardsWithAiCard.add(aiCard); // For some checks, the card must also to be considered if it was just placed on table
+
+                // List of all possible captures with a seven value card of the opponent if the AI card was on table
+                ArrayList<ArrayList<Card>> capturesWithSeven = findPossibleCaptures(new Card(7, "Coins"), tableCardsWithAiCard); // Suit is irrelevant
+
+                // List of all possible captures with a six value card of the opponent if the AI card was on table
+                ArrayList<ArrayList<Card>> capturesWithSix = findPossibleCaptures(new Card(6, "Coins"), tableCardsWithAiCard); // Suit is irrelevant
+
+                int discardScore = 0; // // A score to assess the danger of placing on table that card (lower value = worst choice)
+                int sumTableCards = 0;
+
+                // Only to calculate the sum of the values of the cards on the table to avoid leaving a scopa to the opponent
+                for (Card card : tableCards) {
+                    sumTableCards += card.getValue();
+                }
+
+                // 1) Points or malus to avoid or leave a chance to make a scopa
+                if ((sumTableCards + aiCard.getValue()) > 10) {
+                    discardScore += 50; // Gives a good score to avoid the chance of making scopa to the opponent
+                } else if ((sumTableCards + aiCard.getValue()) <= 10) {
+                    discardScore -= 50; // Gives a malus to favor the chance of making scopa to the opponent
+                }
+
+                // 2) Malus to leave a chance to capture best prime cards from opponent's hand
+                if (!capturesWithSeven.isEmpty()) { // Gives a malus to favor the chance of capturing good cards to the opponent
+                    discardScore -= 20; // Gives a bad malus to leave a chance to capture a seven value card to the opponent
+                }
+
+                // 3) Malus to leave a chance to capture second-best prime cards from opponent's hand
+                if (!capturesWithSix.isEmpty()) { // Gives a malus to favor the chance of capturing good cards to the opponent
+                    discardScore -= 15; // Gives a bad malus to leave a chance to capture a six value card to the opponent
+                }
+
+                // 4) Malus to leave a chance to capture good prime cards
+                discardScore -= aiCard.getPrime(); // Gives a malus based on which prime value leave at the opponent (higher is worst)
+
+                // 5) Malus to leave a chance to capture coins cards
+                if (aiCard.getSuit().equals("Coins")) {
+                    discardScore -= 5; // Gives a malus to leave a Coins card to the opponent
+                }
+
+                // If this discard score is the best found, update your choice
+                if (discardScore > bestScore) {
+                    bestScore = discardScore; // This discard score become the best score
+                    bestCard = aiCard; // So the respective card become the best card to play
+                }
+            }
+        }
+        return bestCard; // return the best card chose by AI
     }
 
     // Player's move
