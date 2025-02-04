@@ -14,6 +14,8 @@ public class GameState {
     private ArrayList<Card> playerCapturedCards;
     private ArrayList<Card> aiCapturedCards;
 
+    private boolean lastCaptureByPlayer;
+
     // players scores
     private int playerScore;
     private int aiScore;
@@ -37,6 +39,14 @@ public class GameState {
         aiScore += 1;
     }
 
+    public void resetPlayerScore (int newScore) {
+        playerScore = 0;
+    }
+
+    public void resetAiScore (int newScore) {
+        aiScore = 0;
+    }
+
     // Getter
     public ArrayList<Card> getTableCards() {
         return tableCards;
@@ -56,6 +66,10 @@ public class GameState {
 
     public ArrayList<Card> getAiCapturedCards() {
         return aiCapturedCards;
+    }
+
+    public boolean isLastCaptureByPlayer() {
+        return lastCaptureByPlayer;
     }
 
     public int getPlayerScore() {
@@ -79,11 +93,7 @@ public class GameState {
         aiCards = aiHand;
     }
 
-    public void setPlayerScore (int newScore) {
-        playerScore = newScore;
-    }
-
-    public void setAiScore (int newScore) {
-        aiScore = newScore;
+    public void setLastCaptureByPlayer(boolean lastCaptureByPlayer) {
+        this.lastCaptureByPlayer = lastCaptureByPlayer;
     }
 }

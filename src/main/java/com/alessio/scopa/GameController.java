@@ -66,11 +66,9 @@ public class GameController {
     public void playRound() {
         int turnNumber = 1;
         String turnString = "TURN " + turnNumber;
+        logPrint("____________________________________________________________________________\n");
         logTitle(turnString);
         while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
-            if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
-                turnNumber += 1;
-            }
             logNewline();
             logAction("TABLE: " + gameState.getTableCards(), 0);
             if (isPlayerTurn) {
@@ -83,9 +81,12 @@ public class GameController {
                 aiMove(selectedAiCard);
             }
             logNewline();
+            if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
+                turnNumber += 1;
+            }
             if (checkRoundEnd(turnNumber)) {
-                calculatePoints(); // Calculate points and reset for the next round
                 endRound();
+                calculatePoints(); // Calculate points and reset for the next round
             } else {
                 isPlayerTurn = !isPlayerTurn; // Switch to the next turn (player's turn)
             }
@@ -131,7 +132,7 @@ public class GameController {
         wait(4); // To emulate the AI’s thinking time
 
         Card bestCard = aiHand.get(0); // It's the card will be returned, and it will be updated from time to time [first card to default]
-        ArrayList<Card> bestCapture = new ArrayList<>(); //
+        ArrayList<Card> bestCapture = new ArrayList<>(); /** try to find a way to give this to performMove **/
         int bestScore = -1; // A score to evaluate the priority of a move (higher value = better choice)
 
         // Check each card of the AI and we see which one makes the best capture
@@ -251,22 +252,27 @@ public class GameController {
         // Logic to calculate card captures
         if (!possibleCaptures.isEmpty()) {
             // For now, chooses the first capture (it must add choice for player and logic for AI)
-            ArrayList<Card> selectedCapture = possibleCaptures.get(0);
+            ArrayList<Card> selectedCapture = possibleCaptures.get(0); /** here goes choice of player and bestCapture for AI **/
             tableCards.removeAll(selectedCapture);
             playerHand.remove(selectedCard);
 
             // Adds captured cards (the selected one and the others on the table) to the player's pile
             capturedCards.addAll(selectedCapture);
             capturedCards.add(selectedCard);
+            gameState.setLastCaptureByPlayer(isPlayer);
             logCapture((isPlayer ? "PLAYER" : "AI"), selectedCapture, selectedCard);
             wait(2);
 
             // Check if it's a Scopa
             if (tableCards.isEmpty()) {
-                logScopa((isPlayer ? "PLAYER" : "AI"));
-                if (isPlayer) gameState.incrementPlayerScore(); // Increment the player's score for the Scopa
-                else gameState.incrementAiScore(); // Increment the AI's score for the Scopa
-                wait(2);
+                if (deck.remainingCards() == 0) {
+                    logPrint("");
+                } else {
+                    logScopa((isPlayer ? "PLAYER" : "AI"));
+                    if (isPlayer) gameState.incrementPlayerScore(); // Increment the player's score for the Scopa
+                    else gameState.incrementAiScore(); // Increment the AI's score for the Scopa
+                    wait(2);
+                }
             }
         } else {
             // If no captures, add the card to the table
@@ -303,10 +309,10 @@ public class GameController {
 
     // Checks if the round is over
     private boolean checkRoundEnd(int turnNumber) {
-        if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
+        if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) { // If hands have no cards
             // If the deck still has cards, deals more
             if (deck.remainingCards() > 0) {
-                logNewline();
+                logPrint("____________________________________________________________________________\n");
                 String turnString = "TURN " + turnNumber;
                 logTitle(turnString);
                 logPrint("");
@@ -322,21 +328,33 @@ public class GameController {
         return false;
     }
 
-    // Calculates points at the end of the round
-    private void calculatePoints() {
-        // Logic to calculate points (scopa, prime, etc.)
-        logAction("Calculating points...", 0);
-        wait(4);
-        logAction("Current scores of the players", 0);
-        logAction("     Player score: " + gameState.getPlayerScore(), 0);
-        logAction("     AI score: " + gameState.getAiScore(), 1);
-        logNewline();
-    }
-
     // Ends the game
     private void endRound() {
         wait(2);
-        logAction("Round over!", 1);
+        logPrint("____________________________________________________________________________\n");
+        logAction("Round over!", 0);
+        // If there are cards on the table, give them to the last player who captures
+        if (!gameState.getTableCards().isEmpty()) {
+            if (gameState.isLastCaptureByPlayer()) {
+                gameState.getPlayerCapturedCards().addAll(gameState.getTableCards());
+            } else {
+                gameState.getAiCapturedCards().addAll(gameState.getTableCards());
+            }
+            logAction("Giving the remaining table cards to " + (gameState.isLastCaptureByPlayer() ? "PLAYER" : "AI"), 0);
+            gameState.getTableCards().clear(); // Clear table
+        } else { logAction("Table clear, nobody collects cards from it", 0); }
+    }
+
+    // Calculates points at the end of the round
+    private void calculatePoints() {
+        // Logic to calculate points (scopa, prime, etc.)
+        logNewline();
+        logAction("Calculating points...", 0);
+        wait(4);
+        logAction("Current scores of the players", 0);
+        logMessage("PLAYER", "score: " + gameState.getPlayerScore(), 1);
+        logMessage("AI", "score: " + gameState.getAiScore(), 1);
+        logNewline();
     }
 
     //----------------------------------------------------------------------------------------
