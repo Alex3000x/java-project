@@ -9,11 +9,14 @@ public class GameController {
     private final GameState gameState; // The state of the game
     private boolean isPlayerTurn; // Indicates if it's the player's turn
 
+    private record Pair<T, U>(T first, U second) {} // Used a record to make sure that from the method "getBestCaptureForCard"
+                                                    // that should return 2 values (the best capture and its respective score)
+
     // Constructor
     public GameController() {
         this.deck = new NeapolitanDeck();
         this.gameState = new GameState();
-        this.isPlayerTurn = true; // The player always starts
+        this.isPlayerTurn = true; // The player always starts, but we can make a random start by the deck
     }
 
     // Starts the game
@@ -132,97 +135,27 @@ public class GameController {
         wait(4); // To emulate the AI’s thinking time
 
         Card bestCard = aiHand.get(0); // It's the card will be returned, and it will be updated from time to time [first card to default]
-        ArrayList<Card> bestCapture = new ArrayList<>(); /** try to find a way to give this to performMove **/
-        int bestScore = -1; // A score to evaluate the priority of a move (higher value = better choice)
+        int bestScore = Integer.MIN_VALUE; // A score to evaluate the best capture with a card (higher value = better choice)
 
-        // Check each card of the AI and we see which one makes the best capture
+        // Check each card of the AI hand and we see which one makes the best capture
         for (Card aiCard : aiHand) {
-            ArrayList<ArrayList<Card>> captures = findPossibleCaptures(aiCard, tableCards); // All possible captures with each card
+            ArrayList<ArrayList<Card>> captures = findPossibleCaptures(aiCard, tableCards); // All possible captures with one card
 
             // If a catch is possible with that card, let’s see which capture gives the best result
             if (!captures.isEmpty()) {
-                for (ArrayList<Card> capture : captures) { // Checks for every possible capture
-                    ArrayList<Card> captureWithAiCard = new ArrayList<>(capture); // Capture that will also include the card being played
-                    captureWithAiCard.add(aiCard); // For some checks, the card that will be played must also to be considered for calculations
-                    int currentScore = 0; // Temporary score to evaluate priority
-
-                    // 1) Points for the Scopa (if it empties the table)
-                    if (capture.size() == tableCards.size()) {
-                        return aiCard; // If it's a scopa, no need to continue searching
-                    }
-
-                    // 2) Points for the capture of the seven of Coins (or "settebello")
-                    for (Card c : captureWithAiCard) {
-                        if ((c.getSuit().equals("Coins")) && (c.getValue() == 7)) {
-                            currentScore += 20; // Gives a high score for the seven of Coins
-                        }
-                    }
-
-                    // 3) Points for the capture of good cards for the prime
-                    for (Card c : captureWithAiCard) {
-                        currentScore += c.getPrime(); // Gives a score based on its value in the prime (higher is better)
-                    }
-
-                    // 4) Points for the capture of Coins cards
-                    for (Card c : captureWithAiCard) {
-                        if (c.getSuit().equals("Coins")) {
-                            currentScore += 10; // Gives a good score for each Coins card earned
-                        }
-                    }
-
-                    // 5) Points for the total number of captured cards
-                    currentScore += capture.size() * 3; // Gives a linear score for each card earned
+                Pair<ArrayList<Card>, Integer> captureInfo = getBestCaptureForCard(aiCard, tableCards, captures); // Best capture and score for that card
+                int currentScore = captureInfo.second();    // But here we need only the score information to define the best card choice
 
                     // If this current score is the best found, update the choice
                     if (currentScore > bestScore) {
                         bestScore = currentScore; // This current score become the best score
                         bestCard = aiCard; // So the card for that capture become the best card
-                        bestCapture = capture; // And also the capture become the best capture
                     }
-                }
             } else {
                 // If a catch isn't possible, let’s see which card to play is the least dangerous
-                ArrayList<Card> tableCardsWithAiCard = new ArrayList<>(tableCards); // Table cards if the card was just placed on table
-                tableCardsWithAiCard.add(aiCard); // For some checks, the card must also to be considered if it was just placed on table
 
-                // List of all possible captures with a seven value card of the opponent if the AI card was on table
-                ArrayList<ArrayList<Card>> capturesWithSeven = findPossibleCaptures(new Card(7, "Coins"), tableCardsWithAiCard); // Suit is irrelevant
-
-                // List of all possible captures with a six value card of the opponent if the AI card was on table
-                ArrayList<ArrayList<Card>> capturesWithSix = findPossibleCaptures(new Card(6, "Coins"), tableCardsWithAiCard); // Suit is irrelevant
-
-                int discardScore = 0; // // A score to assess the danger of placing on table that card (lower value = worst choice)
-                int sumTableCards = 0;
-
-                // Only to calculate the sum of the values of the cards on the table to avoid leaving a scopa to the opponent
-                for (Card card : tableCards) {
-                    sumTableCards += card.getValue();
-                }
-
-                // 1) Points or malus to avoid or leave a chance to make a scopa
-                if ((sumTableCards + aiCard.getValue()) > 10) {
-                    discardScore += 50; // Gives a good score to avoid the chance of making scopa to the opponent
-                } else if ((sumTableCards + aiCard.getValue()) <= 10) {
-                    discardScore -= 50; // Gives a malus to favor the chance of making scopa to the opponent
-                }
-
-                // 2) Malus to leave a chance to capture best prime cards from opponent's hand
-                if (!capturesWithSeven.isEmpty()) { // Gives a malus to favor the chance of capturing good cards to the opponent
-                    discardScore -= 20; // Gives a bad malus to leave a chance to capture a seven value card to the opponent
-                }
-
-                // 3) Malus to leave a chance to capture second-best prime cards from opponent's hand
-                if (!capturesWithSix.isEmpty()) { // Gives a malus to favor the chance of capturing good cards to the opponent
-                    discardScore -= 15; // Gives a bad malus to leave a chance to capture a six value card to the opponent
-                }
-
-                // 4) Malus to leave a chance to capture good prime cards
-                discardScore -= aiCard.getPrime(); // Gives a malus based on which prime value leave at the opponent (higher is worst)
-
-                // 5) Malus to leave a chance to capture coins cards
-                if (aiCard.getSuit().equals("Coins")) {
-                    discardScore -= 5; // Gives a malus to leave a Coins card to the opponent
-                }
+                // A score to evaluate the best card to discard on the table (higher value = not bad choice)
+                int discardScore = getDiscardCardScore(aiCard,tableCards);
 
                 // If this discard score is the best found, update your choice
                 if (discardScore > bestScore) {
@@ -232,6 +165,104 @@ public class GameController {
             }
         }
         return bestCard; // return the best card chose by AI
+    }
+
+    // Return the list of cards that corresponds to the best capture out of all possible ones and its respective score
+    private Pair<ArrayList<Card>, Integer> getBestCaptureForCard(Card aiCard, ArrayList<Card> tableCards, ArrayList<ArrayList<Card>> captures) {
+        ArrayList<Card> bestCapture = new ArrayList<>();
+        int bestScore = Integer.MIN_VALUE;
+
+        // If a catch is possible with that card, let’s see which capture gives the best result
+        if (!captures.isEmpty()) {
+            for (ArrayList<Card> capture : captures) { // Checks for every possible capture
+                ArrayList<Card> captureWithAiCard = new ArrayList<>(capture); // Capture that will also include the card being played
+                captureWithAiCard.add(aiCard); // For some checks, the card that will be played must also to be considered for calculations
+                int score = 0; // Temporary score to evaluate priority
+
+                // Now there will be a list of conditions for which scores are given to the captures that will define which is the best
+                // 1) Points for the Scopa (if it empties the table)
+                if (capture.size() == tableCards.size()) {
+                    return new Pair<>(capture, 1000); // If it's a scopa, no need to continue searching and scoring, directly gives this capture
+                }
+
+                // 2) Points for the capture of the seven of Coins (or "settebello")
+                for (Card c : captureWithAiCard) {
+                    if ((c.getSuit().equals("Coins")) && (c.getValue() == 7)) {
+                        score += 20; // Gives a high score for the seven of Coins
+                    }
+                }
+
+                // 3) Points for the capture of good cards for the prime
+                for (Card c : captureWithAiCard) {
+                    score += c.getPrime(); // Gives a score based on its value in the prime (higher is better)
+                }
+
+                // 4) Points for the capture of Coins cards
+                for (Card c : captureWithAiCard) {
+                    if (c.getSuit().equals("Coins")) {
+                        score += 10; // Gives a good score for each Coins card earned
+                    }
+                }
+
+                // 5) Points for the total number of captured cards
+                score += capture.size() * 3; // Gives a linear score for each card earned
+
+                // If this current score is the best found, update the choice
+                if (score > bestScore) {
+                    bestScore = score; // This current score become the best score
+                    bestCapture = new ArrayList<>(capture); // And so also the capture become the best capture
+                }
+            }
+        }
+        return new Pair<>(bestCapture, bestScore);
+    }
+
+    // Return the score of the card that corresponds to the best card to discard on the table
+    private Integer getDiscardCardScore(Card aiCard, ArrayList<Card> tableCards) {
+
+        ArrayList<Card> tableCardsWithAiCard = new ArrayList<>(tableCards); // Table cards if the card was just placed on table
+        tableCardsWithAiCard.add(aiCard); // For some checks, the card must also to be considered if it was just placed on table
+
+        // List of all possible captures with a seven value card of the opponent if the AI card was on table
+        ArrayList<ArrayList<Card>> capturesWithSeven = findPossibleCaptures(new Card(7, "Coins"), tableCardsWithAiCard); // Suit is irrelevant
+
+        // List of all possible captures with a six value card of the opponent if the AI card was on table
+        ArrayList<ArrayList<Card>> capturesWithSix = findPossibleCaptures(new Card(6, "Coins"), tableCardsWithAiCard); // Suit is irrelevant
+
+        int score = 0; // // A score to assess the danger of placing on table that card (lower value = worst choice)
+        int sumTableCards = 0;
+
+        // Only to calculate the sum of the values of the cards on the table to avoid leaving a scopa to the opponent
+        for (Card card : tableCards) {
+            sumTableCards += card.getValue();
+        }
+
+        // 1) Points or malus to avoid or leave a chance to make a scopa
+        if ((sumTableCards + aiCard.getValue()) > 10) {
+            score += 50; // Gives a good score to avoid the chance of making scopa to the opponent
+        } else if ((sumTableCards + aiCard.getValue()) <= 10) {
+            score -= 50; // Gives a malus to favor the chance of making scopa to the opponent
+        }
+
+        // 2) Malus to leave a chance to capture best prime cards from opponent's hand
+        if (!capturesWithSeven.isEmpty()) { // Gives a malus to favor the chance of capturing good cards to the opponent
+            score -= 20; // Gives a bad malus to leave a chance to capture a seven value card to the opponent
+        }
+
+        // 3) Malus to leave a chance to capture second-best prime cards from opponent's hand
+        if (!capturesWithSix.isEmpty()) { // Gives a malus to favor the chance of capturing good cards to the opponent
+            score -= 15; // Gives a bad malus to leave a chance to capture a six value card to the opponent
+        }
+
+        // 4) Malus to leave a chance to capture good prime cards
+        score -= aiCard.getPrime(); // Gives a malus based on which prime value leave at the opponent (higher is worst)
+
+        // 5) Malus to leave a chance to capture coins cards
+        if (aiCard.getSuit().equals("Coins")) {
+            score -= 5; // Gives a malus to leave a Coins card to the opponent
+        }
+
+        return score;
     }
 
     // Player's move
@@ -248,11 +279,20 @@ public class GameController {
     private void performMove(Card selectedCard, ArrayList<Card> playerHand, ArrayList<Card> capturedCards, boolean isPlayer) {
         ArrayList<Card> tableCards = gameState.getTableCards();
         ArrayList<ArrayList<Card>> possibleCaptures = findPossibleCaptures(selectedCard, tableCards);
+        ArrayList<Card> selectedCapture;
 
         // Logic to calculate card captures
         if (!possibleCaptures.isEmpty()) {
-            // For now, chooses the first capture (it must add choice for player and logic for AI)
-            ArrayList<Card> selectedCapture = possibleCaptures.get(0); /** here goes choice of player and bestCapture for AI **/
+            // If there are multiple possible captures
+            if (possibleCaptures.size() > 1) {
+                if (isPlayer) { // For player there is a choice
+                    selectedCapture = selectPlayerCapture(selectedCard, possibleCaptures);
+                } else { // and for AI there is used the best capture logic
+                    selectedCapture = getBestCaptureForCard(selectedCard,tableCards,possibleCaptures).first();
+                }
+            } else { // If there is only one possible capture, it will be taken
+                selectedCapture = possibleCaptures.get(0);
+            }
             tableCards.removeAll(selectedCapture);
             playerHand.remove(selectedCard);
 
@@ -305,6 +345,29 @@ public class GameController {
             }
         }
         return possibleCaptures;
+    }
+
+    private ArrayList<Card> selectPlayerCapture(Card selectedCard, ArrayList<ArrayList<Card>> possibleCaptures) {
+        Scanner scanner = new Scanner(System.in);
+
+        logMessage("PLAYER", "With the " + selectedCard + " you have these capture options:",1);
+        for (int i = 0; i < possibleCaptures.size(); i++) {
+            logPrint((i + 1) + ") " + possibleCaptures.get(i) + "\n");
+        }
+
+        int captureChoice;
+        while (true) {
+            logMessage("PLAYER", "-Choose a capture (1-" + possibleCaptures.size() + "): ", 0);
+            if (scanner.hasNextInt()) {
+                captureChoice = scanner.nextInt();
+                if (captureChoice >= 1 && captureChoice <= possibleCaptures.size()) {
+                    break; // Valid input
+                }
+            }
+            scanner.nextLine(); // Clean the scanner buffer
+            logAction("Invalid choice. Try again.", 0);
+        }
+        return possibleCaptures.get(captureChoice - 1);
     }
 
     // Checks if the round is over
