@@ -140,7 +140,17 @@ public class GameController {
         // Check each card of the AI hand and we see which one makes the best capture
         for (Card aiCard : aiHand) {
             ArrayList<ArrayList<Card>> captures = findPossibleCaptures(aiCard, tableCards); // All possible captures with one card
+            ArrayList<ArrayList<Card>> identicalCaptures = new ArrayList<>();
 
+            // Check for identical captures : if presents, they will be saved in identicalCaptures
+            for (ArrayList<Card> capture : captures) {
+                if (capture.size() == 1 && capture.get(0).getValue() == aiCard.getValue()) {
+                    identicalCaptures.add(capture);
+                }
+            }
+            if (!identicalCaptures.isEmpty()) { // If some identical capture are presents,
+                captures = identicalCaptures; // AI must consider to consider only this(those) for the card choice
+            }
             // If a catch is possible with that card, let’s see which capture gives the best result
             if (!captures.isEmpty()) {
                 Pair<ArrayList<Card>, Integer> captureInfo = getBestCaptureForCard(aiCard, tableCards, captures); // Best capture and score for that card
@@ -280,6 +290,17 @@ public class GameController {
         ArrayList<Card> tableCards = gameState.getTableCards();
         ArrayList<ArrayList<Card>> possibleCaptures = findPossibleCaptures(selectedCard, tableCards);
         ArrayList<Card> selectedCapture;
+        ArrayList<ArrayList<Card>> identicalCaptures = new ArrayList<>();
+
+        // Check for identical card: if present(s),
+        for (ArrayList<Card> capture : possibleCaptures) {
+            if (capture.size() == 1 && capture.get(0).getValue() == selectedCard.getValue()) {
+                identicalCaptures.add(capture);
+            }
+        }
+        if (!identicalCaptures.isEmpty()) { // If some identical capture are presents,
+            possibleCaptures = identicalCaptures; // Players must consider to take only this(those) by force
+        }
 
         // Logic to calculate card captures
         if (!possibleCaptures.isEmpty()) {
@@ -303,10 +324,12 @@ public class GameController {
             logCapture((isPlayer ? "PLAYER" : "AI"), selectedCapture, selectedCard);
             wait(2);
 
-            // Check if it's a Scopa
+            // Check if it's a Scopa (the table is clear after a capture)
             if (tableCards.isEmpty()) {
-                if (deck.remainingCards() == 0) {
-                    logPrint("");
+                // But first checks if the last player in the last turn takes all the cards on the table with a capture
+                // If it is so then it never counts as a scopa
+                if (deck.remainingCards() == 0 && gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
+                    logAction("This one doesn't counts as a scopa.",1);
                 } else {
                     logScopa((isPlayer ? "PLAYER" : "AI"));
                     if (isPlayer) gameState.incrementPlayerScore(); // Increment the player's score for the Scopa
@@ -403,7 +426,7 @@ public class GameController {
             } else {
                 gameState.getAiCapturedCards().addAll(gameState.getTableCards());
             }
-            logAction("Giving the remaining table cards to " + (gameState.isLastCaptureByPlayer() ? "PLAYER" : "AI"), 0);
+            logAction("Giving the remaining table cards " + gameState.getTableCards().toString() + " to " + (gameState.isLastCaptureByPlayer() ? "PLAYER" : "AI"), 0);
             gameState.getTableCards().clear(); // Clear table
         } else { logAction("Table clear, nobody collects cards from it", 0); }
     }
