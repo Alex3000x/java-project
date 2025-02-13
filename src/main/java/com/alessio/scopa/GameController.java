@@ -1,6 +1,8 @@
 package com.alessio.scopa;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner; // Import Scanner for input
 import java.util.concurrent.TimeUnit;
 
@@ -69,10 +71,10 @@ public class GameController {
     public void playRound() {
         int turnNumber = 1;
         String turnString = "TURN " + turnNumber;
-        logPrint("____________________________________________________________________________\n");
-        logTitle(turnString);
+        logNewRound();
         while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
-            logNewline();
+            logPrint("_____________________________________________________________________________________________________________________\n");
+            logTitle(turnString);
             logAction("TABLE: " + gameState.getTableCards(), 0);
             if (isPlayerTurn) {
                 Card selectedPlayerCard = selectPlayerCard(); // Card selection from player
@@ -86,8 +88,9 @@ public class GameController {
             logNewline();
             if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
                 turnNumber += 1;
+                turnString = "TURN " + turnNumber;
             }
-            if (checkRoundEnd(turnNumber)) {
+            if (checkRoundEnd()) {
                 endRound();
                 calculatePoints(); // Calculate points and reset for the next round
             } else {
@@ -195,10 +198,10 @@ public class GameController {
                     return new Pair<>(capture, 1000); // If it's a scopa, no need to continue searching and scoring, directly gives this capture
                 }
 
-                // 2) Points for the capture of the seven of Coins (or "settebello")
+                // 2) Points for the capture of the settebello (the seven of Coins)
                 for (Card c : captureWithAiCard) {
                     if ((c.getSuit().equals("Coins")) && (c.getValue() == 7)) {
-                        score += 20; // Gives a high score for the seven of Coins
+                        score += 20; // Gives a high score for the settebello
                     }
                 }
 
@@ -332,8 +335,8 @@ public class GameController {
                     logAction("This one doesn't counts as a scopa.",1);
                 } else {
                     logScopa((isPlayer ? "PLAYER" : "AI"));
-                    if (isPlayer) gameState.incrementPlayerScore(); // Increment the player's score for the Scopa
-                    else gameState.incrementAiScore(); // Increment the AI's score for the Scopa
+                    if (isPlayer) gameState.addPlayerScore(1); // Increment the player's score for the Scopa
+                    else gameState.addAiScore(1); // Increment the AI's score for the Scopa
                     wait(2);
                 }
             }
@@ -394,14 +397,10 @@ public class GameController {
     }
 
     // Checks if the round is over
-    private boolean checkRoundEnd(int turnNumber) {
+    private boolean checkRoundEnd() {
         if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) { // If hands have no cards
             // If the deck still has cards, deals more
             if (deck.remainingCards() > 0) {
-                logPrint("____________________________________________________________________________\n");
-                String turnString = "TURN " + turnNumber;
-                logTitle(turnString);
-                logPrint("");
                 logAction("New distribution of cards", 0);
                 dealCardsToPlayers(); // Deals new cards to player and AI
                 return false;
@@ -417,8 +416,6 @@ public class GameController {
     // Ends the game
     private void endRound() {
         wait(2);
-        logPrint("____________________________________________________________________________\n");
-        logAction("Round over!", 0);
         // If there are cards on the table, give them to the last player who captures
         if (!gameState.getTableCards().isEmpty()) {
             if (gameState.isLastCaptureByPlayer()) {
@@ -429,18 +426,123 @@ public class GameController {
             logAction("Giving the remaining table cards " + gameState.getTableCards().toString() + " to " + (gameState.isLastCaptureByPlayer() ? "PLAYER" : "AI"), 0);
             gameState.getTableCards().clear(); // Clear table
         } else { logAction("Table clear, nobody collects cards from it", 0); }
+        logNewline();
+        logEndRound();
     }
 
     // Calculates points at the end of the round
     private void calculatePoints() {
-        // Logic to calculate points (scopa, prime, etc.)
         logNewline();
-        logAction("Calculating points...", 0);
+        logAction("Calculating points for this round...", 0);
         wait(4);
-        logAction("Current scores of the players", 0);
-        logMessage("PLAYER", "score: " + gameState.getPlayerScore(), 1);
-        logMessage("AI", "score: " + gameState.getAiScore(), 1);
+
+        ArrayList<Card> playerCards = gameState.getPlayerCapturedCards();
+        ArrayList<Card> aiCards = gameState.getAiCapturedCards();
+
+        int playerScore = 0;
+        int aiScore = 0;
+
+        // Here the logic to calculate points (cards, coins, settebello and prime)
+
+        // 1) Most of the cards
+        logPrint(" -Majority of cards owned by");
+        if (playerCards.size() > aiCards.size()) {
+            playerScore++;
+            logPoint("PLAYER");
+        } else if (aiCards.size() == playerCards.size()) {
+
+            logNoPoint();
+        } else {
+            aiScore++;
+            logPoint("AI");
+        }
+        logPrint("   (PLAYER: " + playerCards.size() + "   |AI: " + aiCards.size() + ")\n");
+        wait(4);
+
+        // 2) Most of the coins cards
+        int playerCoins = (int) playerCards.stream().filter(c -> c.getSuit().equals("Coins")).count();
+        int aiCoins = (int) aiCards.stream().filter(c -> c.getSuit().equals("Coins")).count();
+        logPrint(" -Majority of Coins suit cards owned by");
+        if (playerCoins > aiCoins) {
+            playerScore++;
+            logPoint("PLAYER");
+        } else if (playerCoins == aiCoins) {
+
+            logNoPoint();
+        } else {
+            aiScore++;
+            logPoint("AI");
+        }
+        logPrint("   (PLAYER: " + playerCoins + "   |    AI: " + aiCoins + ")\n");
+        wait(4);
+
+        // 3) Settebello
+        boolean playerHasSettebello = playerCards.stream().anyMatch(c -> c.getSuit().equals("Coins") && c.getValue() == 7);
+        logPrint(" -Settebello (Seven of Coins) owned by");
+        if (playerHasSettebello) {
+            playerScore++;
+            logPoint("PLAYER");
+        } else {
+            aiScore++;
+            logPoint("AI");
+        }
+        wait(4);
+
+        // 4) Prime (or "primiera")
+        ArrayList<Card> playerPrimeCards = new ArrayList<>();
+        ArrayList<Card> aiPrimeCards = new ArrayList<>();
+        int playerPrime = calculateBestPrime(playerCards, playerPrimeCards);
+        int aiPrime = calculateBestPrime(aiCards, aiPrimeCards);
+        logPrint(" -Best prime owned by");
+        if (playerPrime > aiPrime) {
+            playerScore++;
+            logPoint("PLAYER");
+        } else if (aiPrime == playerPrime) {
+            aiScore++;
+            logNoPoint();
+        } else {
+            logPoint("AI");
+        }
+        logPrint("   (PLAYER: " + playerPrime + " with these " + playerPrimeCards + "   |    AI: " + aiPrime + "with these " + aiPrimeCards + ")\n");
+        wait(4);
+
+        // Assign points to the gameState scores
+        logAction("Adding points to the players...", 1);
+        gameState.addPlayerScore(playerScore);
+        gameState.addAiScore(aiScore);
+        wait(4);
+
+        // Print the current score updated
+        logAction("Scores updated:", 0);
+        logMessage("PLAYER", "\tscore: " + gameState.getPlayerScore(), 1);
+        logMessage("AI", "\tscore: " + gameState.getAiScore(), 1);
         logNewline();
+    }
+
+    private int calculateBestPrime(ArrayList<Card> capturedCards, ArrayList<Card> primeCards) {
+        // Map to store the highest prime-value card found for each suit
+        Map<String, Integer> bestPrimeValues = new HashMap<>();
+        Map<String, Card> bestPrimeList = new HashMap<>(); // Stores the best card for each suit
+        bestPrimeValues.put("Coins", 0);
+        bestPrimeValues.put("Swords", 0);
+        bestPrimeValues.put("Cups", 0);
+        bestPrimeValues.put("Clubs", 0);
+
+        for (Card c : capturedCards) {
+            String suitCard = c.getSuit();
+            int primeValueCard = c.getPrime(); // Assuming getPrime() returns the correct prime value
+            if (primeValueCard > bestPrimeValues.get(suitCard)) { // Compare prime value of card with the one in the Map in the same suit (at beginning it is 0)
+                bestPrimeValues.put(suitCard, primeValueCard);
+                bestPrimeList.put(suitCard, c);
+            }
+        }
+
+        // Store the best prime cards in the provided list
+        primeCards.clear();
+        primeCards.addAll(bestPrimeList.values());
+
+        // Sum the highest prime values of each suit to get the total prime score
+        return bestPrimeValues.values().stream().mapToInt(Integer::intValue).sum();
     }
 
     //----------------------------------------------------------------------------------------
@@ -466,14 +568,25 @@ public class GameController {
     }
 
     private void logStartGame() {
-        System.out.println("                                        *-------------------*");
-        System.out.println("                                        |   GAME STARTED    |");
-        System.out.println("                                        *-------------------*");
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+        System.out.println("|                                                   GAME STARTED                                                    |");
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+    }
+
+    private void logNewRound() {
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+        System.out.println("|                                                    NEW ROUND                                                      |");
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+    }
+
+    private void logEndRound() {
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+        System.out.println("|                                                    END ROUND                                                      |");
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
     }
 
     private void logTitle(String message) {
         System.out.println("[" + message + "]");
-        //for(int i = 0; i < newline; i++) { System.out.println("\n"); }
     }
 
     private void logAction(String message, int newlines) {
@@ -496,6 +609,14 @@ public class GameController {
 
     private void logScopa(String player) {
         System.out.println(" |" + player + "|  made a Scopa! (+1)");
+    }
+
+    private void logPoint(String player) {
+        System.out.print(" |" + player + "| who gets a point (+1)");
+    }
+
+    private void logNoPoint() {
+        System.out.print(" no one. It's a draw, nobody gets the point;");
     }
 
     private void logAiHand() {

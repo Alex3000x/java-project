@@ -31,12 +31,12 @@ public class GameState {
         aiScore = 0;
     }
 
-    public void incrementPlayerScore() {
-        playerScore += 1;
+    public void addPlayerScore(int pointsToAdd) {
+        playerScore += pointsToAdd;
     }
 
-    public void incrementAiScore() {
-        aiScore += 1;
+    public void addAiScore(int pointsToAdd) {
+        aiScore += pointsToAdd;
     }
 
     public void resetPlayerScore (int newScore) {
