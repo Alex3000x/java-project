@@ -118,29 +118,30 @@ public class GameController {
 
     // Card selection from the player
     private Card selectPlayerCard() {
-        Scanner scanner = new Scanner(System.in);
-        ArrayList<Card> playerHand = gameState.getPlayerHand();
+        try (Scanner scanner = new Scanner(System.in)) {
+            ArrayList<Card> playerHand = gameState.getPlayerHand();
 
-        // Shows available cards in the player's hand
-        logAction("PLAYER's hand:", 0);
-        for (int i = 0; i < playerHand.size(); i++) {
-            logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
-        }
-
-        // Asks the player which card he wants to play
-        int playerChoice;
-        while (true) {
-            logMessage("PLAYER", "-Choose a card to play (1-" + playerHand.size() + "): ", 0);
-            if (scanner.hasNextInt()) {
-                playerChoice = scanner.nextInt();
-                if (playerChoice >= 1 && playerChoice <= playerHand.size()) {
-                    break; // Valid input
-                }
+            // Shows available cards in the player's hand
+            logAction("PLAYER's hand:", 0);
+            for (int i = 0; i < playerHand.size(); i++) {
+                logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
             }
-            scanner.nextLine(); // Clean the scanner buffer
-            logAction("Invalid choice. Try again.", 0);
-        }
-        return playerHand.get(playerChoice - 1);
+
+            // Asks the player which card he wants to play
+            int playerChoice;
+            while (true) {
+                logMessage("PLAYER", "-Choose a card to play (1-" + playerHand.size() + "): ", 0);
+                if (scanner.hasNextInt()) {
+                    playerChoice = scanner.nextInt();
+                    if (playerChoice >= 1 && playerChoice <= playerHand.size()) {
+                        break; // Valid input
+                    }
+                }
+                scanner.nextLine(); // Clean the scanner buffer
+                logAction("Invalid choice. Try again.", 0);
+            }
+            return playerHand.get(playerChoice - 1);
+        } // Scanner is closed after use
     }
 
     // This would be the best move choice from AI
@@ -391,26 +392,26 @@ public class GameController {
     }
 
     private ArrayList<Card> selectPlayerCapture(Card selectedCard, ArrayList<ArrayList<Card>> possibleCaptures) {
-        Scanner scanner = new Scanner(System.in);
-
-        logMessage("PLAYER", "With the " + selectedCard + " you have these capture options:",1);
-        for (int i = 0; i < possibleCaptures.size(); i++) {
-            logPrint((i + 1) + ") " + possibleCaptures.get(i) + "\n");
-        }
-
-        int captureChoice;
-        while (true) {
-            logMessage("PLAYER", "-Choose a capture (1-" + possibleCaptures.size() + "): ", 0);
-            if (scanner.hasNextInt()) {
-                captureChoice = scanner.nextInt();
-                if (captureChoice >= 1 && captureChoice <= possibleCaptures.size()) {
-                    break; // Valid input
-                }
+        try(Scanner scanner = new Scanner(System.in)) {
+            logMessage("PLAYER", "With the " + selectedCard + " you have these capture options:", 1);
+            for (int i = 0; i < possibleCaptures.size(); i++) {
+                logPrint((i + 1) + ") " + possibleCaptures.get(i) + "\n");
             }
-            scanner.nextLine(); // Clean the scanner buffer
-            logAction("Invalid choice. Try again.", 0);
+
+            int captureChoice;
+            while (true) {
+                logMessage("PLAYER", "-Choose a capture (1-" + possibleCaptures.size() + "): ", 0);
+                if (scanner.hasNextInt()) {
+                    captureChoice = scanner.nextInt();
+                    if (captureChoice >= 1 && captureChoice <= possibleCaptures.size()) {
+                        break; // Valid input
+                    }
+                }
+                scanner.nextLine(); // Clean the scanner buffer
+                logAction("Invalid choice. Try again.", 0);
+            }
+            return possibleCaptures.get(captureChoice - 1);
         }
-        return possibleCaptures.get(captureChoice - 1);
     }
 
     // Checks if the round is over
