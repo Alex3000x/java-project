@@ -8,9 +8,10 @@ import java.util.concurrent.TimeUnit;
 
 public class GameController {
     private final GameState gameState; // The state of the game
+    private static final Scanner inputPlayer = new Scanner(System.in);
+    private static final int winningScore = 11; // Default value, can be changed if needed
     private NeapolitanDeck deck; // The deck
     private boolean isPlayerTurn; // Indicates if it's the player's turn
-    private static final int winningScore = 11; // Default value, can be changed if needed
 
     private record Pair<T, U>(T first, U second) {} // Used a record to make sure that from the method "getBestCaptureForCard"
                                                     // that should return 2 values (the best capture and its respective score)
@@ -23,7 +24,7 @@ public class GameController {
 
     // Starts the game
     public void startGame() {
-        logStartGame();
+        GameLogger.logStartGame();
         //gameState.resetGame(); // Reset the game state, including scores and the deck
         // The game continues until one player reaches the WINNING_SCORE
         while (gameState.getPlayerScore() < winningScore && gameState.getAiScore() < winningScore) {
@@ -35,6 +36,7 @@ public class GameController {
                 // In case both achieve the same winning score, ends when results are different (one greater than the other)
                 if (gameState.getPlayerScore() != gameState.getAiScore()) {
                     //announceWinner();
+                    inputPlayer.close(); // Close scanner input of player
                     break; // End the game
                 }
             }
@@ -46,13 +48,13 @@ public class GameController {
     // Initializes a new round by shuffling the deck and dealing cards to players and on the table
     private void initializeRound() {
         deck = new NeapolitanDeck();
-        logAction("Shuffling deck...", 0);
+        GameLogger.logAction("Shuffling deck...", 0);
         deck.shuffleDeck(); // Shuffles the deck
         wait(4);
-        logAction("Dealing 3 cards to the player and to AI...", 0);
+        GameLogger.logAction("Dealing 3 cards to the player and to AI...", 0);
         dealCardsToPlayers(); // Deals the 3 cards to player and AI
         wait(4);
-        logAction("Dealing 4 cards on the table...", 0);
+        GameLogger.logAction("Dealing 4 cards on the table...", 0);
         dealCardsOnTable(); // Deals the 4 cards on the table
         wait(2);
     }
@@ -87,23 +89,23 @@ public class GameController {
     }
 
     public void playRound() {
-        logNewRound();
+        GameLogger.logNewRound();
         int turnNumber = 1;
         while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
-            logPrint("_____________________________________________________________________________________________________________________\n");
+            GameLogger.logPrint("_____________________________________________________________________________________________________________________\n");
             String turnString = "TURN " + turnNumber;
-            logTitle(turnString);
-            logAction("TABLE: " + gameState.getTableCards(), 0);
+            GameLogger.logTitle(turnString);
+            GameLogger.logAction("TABLE: " + gameState.getTableCards(), 0);
             if (isPlayerTurn) {
                 Card selectedPlayerCard = selectPlayerCard(); // Card selection from player
-                logMessage("PLAYER", "choose to play the " + selectedPlayerCard, 1);
+                GameLogger.logMessage("PLAYER", "choose to play the " + selectedPlayerCard, 1);
                 playerMove(selectedPlayerCard);
             } else {
                 Card selectedAiCard = chooseAiCard(); // Card selection from AI
-                logMessage("AI", "choose to play the " + selectedAiCard, 1);
+                GameLogger.logMessage("AI", "choose to play the " + selectedAiCard, 1);
                 aiMove(selectedAiCard);
             }
-            logNewline();
+            GameLogger.logNewline();
             if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
                 turnNumber += 1;
             }
@@ -118,30 +120,28 @@ public class GameController {
 
     // Card selection from the player
     private Card selectPlayerCard() {
-        try (Scanner scanner = new Scanner(System.in)) {
             ArrayList<Card> playerHand = gameState.getPlayerHand();
 
             // Shows available cards in the player's hand
-            logAction("PLAYER's hand:", 0);
+            GameLogger.logAction("PLAYER's hand:", 0);
             for (int i = 0; i < playerHand.size(); i++) {
-                logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
+                GameLogger.logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
             }
 
             // Asks the player which card he wants to play
             int playerChoice;
             while (true) {
-                logMessage("PLAYER", "-Choose a card to play (1-" + playerHand.size() + "): ", 0);
-                if (scanner.hasNextInt()) {
-                    playerChoice = scanner.nextInt();
+                GameLogger.logMessage("PLAYER", "-Choose a card to play (1-" + playerHand.size() + "): ", 0);
+                if (inputPlayer.hasNextInt()) {
+                    playerChoice = inputPlayer.nextInt();
                     if (playerChoice >= 1 && playerChoice <= playerHand.size()) {
                         break; // Valid input
                     }
                 }
-                scanner.nextLine(); // Clean the scanner buffer
-                logAction("Invalid choice. Try again.", 0);
+                inputPlayer.nextLine(); // Clean the scanner buffer
+                GameLogger.logAction("Invalid choice. Try again.", 0);
             }
             return playerHand.get(playerChoice - 1);
-        } // Scanner is closed after use
     }
 
     // This would be the best move choice from AI
@@ -150,9 +150,9 @@ public class GameController {
         ArrayList<Card> tableCards = gameState.getTableCards();
 
         // Shows graphically the number of remaining cards in the AI's hand and the waiting message
-        logPrint("►AI's hand: ");
-        logAiHand();
-        logMessage("AI", "is thinking what to do...", 1);
+        GameLogger.logPrint("►AI's hand: ");
+        GameLogger.logAiHand(gameState.getAiHand().size());
+        GameLogger.logMessage("AI", "is thinking what to do...", 1);
         wait(4); // To emulate the AI’s thinking time
 
         Card bestCard = aiHand.get(0); // It's the card will be returned, and it will be updated from time to time [first card to default]
@@ -342,7 +342,7 @@ public class GameController {
             capturedCards.addAll(selectedCapture);
             capturedCards.add(selectedCard);
             gameState.setLastCaptureByPlayer(isPlayer);
-            logCapture((isPlayer ? "PLAYER" : "AI"), selectedCapture, selectedCard);
+            GameLogger.logCapture((isPlayer ? "PLAYER" : "AI"), selectedCapture, selectedCard);
             wait(2);
 
             // Check if it's a Scopa (the table is clear after a capture)
@@ -350,9 +350,9 @@ public class GameController {
                 // But first checks if the last player in the last turn takes all the cards on the table with a capture
                 // If it is so then it never counts as a scopa
                 if (deck.remainingCards() == 0 && gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
-                    logAction("This one doesn't counts as a scopa.",1);
+                    GameLogger.logAction("This one doesn't counts as a scopa.",1);
                 } else {
-                    logScopa((isPlayer ? "PLAYER" : "AI"));
+                    GameLogger.logScopa((isPlayer ? "PLAYER" : "AI"));
                     if (isPlayer) gameState.addPlayerScore(1); // Increment the player's score for the Scopa
                     else gameState.addAiScore(1); // Increment the AI's score for the Scopa
                     wait(2);
@@ -362,7 +362,7 @@ public class GameController {
             // If no captures, add the card to the table
             tableCards.add(selectedCard);
             playerHand.remove(selectedCard);
-            logMove((isPlayer ? "PLAYER" : "AI"), selectedCard);
+            GameLogger.logMove((isPlayer ? "PLAYER" : "AI"), selectedCard);
             wait(2);
         }
     }
@@ -392,26 +392,24 @@ public class GameController {
     }
 
     private ArrayList<Card> selectPlayerCapture(Card selectedCard, ArrayList<ArrayList<Card>> possibleCaptures) {
-        try(Scanner scanner = new Scanner(System.in)) {
-            logMessage("PLAYER", "With the " + selectedCard + " you have these capture options:", 1);
-            for (int i = 0; i < possibleCaptures.size(); i++) {
-                logPrint((i + 1) + ") " + possibleCaptures.get(i) + "\n");
-            }
-
-            int captureChoice;
-            while (true) {
-                logMessage("PLAYER", "-Choose a capture (1-" + possibleCaptures.size() + "): ", 0);
-                if (scanner.hasNextInt()) {
-                    captureChoice = scanner.nextInt();
-                    if (captureChoice >= 1 && captureChoice <= possibleCaptures.size()) {
-                        break; // Valid input
-                    }
-                }
-                scanner.nextLine(); // Clean the scanner buffer
-                logAction("Invalid choice. Try again.", 0);
-            }
-            return possibleCaptures.get(captureChoice - 1);
+        GameLogger.logMessage("PLAYER", "With the " + selectedCard + " you have these capture options:", 1);
+        for (int i = 0; i < possibleCaptures.size(); i++) {
+            GameLogger.logPrint((i + 1) + ") " + possibleCaptures.get(i) + "\n");
         }
+
+        int captureChoice;
+        while (true) {
+            GameLogger.logMessage("PLAYER", "-Choose a capture (1-" + possibleCaptures.size() + "): ", 0);
+            if (inputPlayer.hasNextInt()) {
+                captureChoice = inputPlayer.nextInt();
+                if (captureChoice >= 1 && captureChoice <= possibleCaptures.size()) {
+                    break; // Valid input
+                }
+            }
+            inputPlayer.nextLine(); // Clean the scanner buffer
+            GameLogger.logAction("Invalid choice. Try again.", 0);
+        }
+        return possibleCaptures.get(captureChoice - 1);
     }
 
     // Checks if the round is over
@@ -419,7 +417,7 @@ public class GameController {
         if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) { // If hands have no cards
             // If the deck still has cards, deals more
             if (deck.remainingCards() > 0) {
-                logAction("New distribution of cards", 0);
+                GameLogger.logAction("New distribution of cards", 0);
                 dealCardsToPlayers(); // Deals new cards to player and AI
                 return false;
             }
@@ -441,15 +439,17 @@ public class GameController {
             } else {
                 gameState.getAiCapturedCards().addAll(gameState.getTableCards());
             }
-            logAction("Giving the remaining table cards " + gameState.getTableCards().toString() + " to " + (gameState.isLastCaptureByPlayer() ? "PLAYER" : "AI"), 0);
+            GameLogger.logAction("Giving the remaining table cards " + gameState.getTableCards().toString() + " to " + (gameState.isLastCaptureByPlayer() ? "PLAYER" : "AI"), 0);
             gameState.getTableCards().clear(); // Clear table
-        } else { logAction("Table clear, nobody collects cards from it", 0); }
-        logNewline();
-        logEndRound();
+        } else {
+        GameLogger.logAction("Table clear, nobody collects cards from it", 0);
+        }
+        GameLogger.logNewline();
+        GameLogger.logEndRound();
     }
 
     private void resetRound() {
-        logAction("Resetting round for a new match...", 0);
+        GameLogger.logAction("Resetting round for a new match...", 0);
 
         gameState.clearTableCards();
         gameState.clearPlayerHand();
@@ -461,8 +461,8 @@ public class GameController {
 
     // Calculates points at the end of the round
     private void calculatePoints() {
-        logNewline();
-        logAction("Calculating points for this round...", 0);
+        GameLogger.logNewline();
+        GameLogger.logAction("Calculating points for this round...", 0);
         wait(4);
 
         ArrayList<Card> playerCards = gameState.getPlayerCapturedCards();
@@ -474,48 +474,48 @@ public class GameController {
         // Here the logic to calculate points (cards, coins, settebello and prime)
 
         // 1) Most of the cards
-        logPrint(" -Majority of cards owned by");
+        GameLogger.logPrint(" -Majority of cards owned by");
         if (playerCards.size() > aiCards.size()) {
             playerScore++;
-            logPoint("PLAYER");
+            GameLogger.logPoint("PLAYER");
         } else if (aiCards.size() == playerCards.size()) {
 
-            logNoPoint();
+            GameLogger.logNoPoint();
         } else {
             aiScore++;
-            logPoint("AI");
+            GameLogger.logPoint("AI");
         }
-        logPrint(" --> (PLAYER: " + playerCards.size() + " | AI: " + aiCards.size() + ")\n");
+        GameLogger.logPrint(" --> (PLAYER: " + playerCards.size() + " | AI: " + aiCards.size() + ")\n");
         wait(4);
 
         // 2) Most of the coins cards
         int playerCoins = (int) playerCards.stream().filter(c -> c.getSuit().equals("Coins")).count();
         int aiCoins = (int) aiCards.stream().filter(c -> c.getSuit().equals("Coins")).count();
-        logPrint(" -Majority of Coins suit cards owned by");
+        GameLogger.logPrint(" -Majority of Coins suit cards owned by");
         if (playerCoins > aiCoins) {
             playerScore++;
-            logPoint("PLAYER");
+            GameLogger.logPoint("PLAYER");
         } else if (playerCoins == aiCoins) {
 
-            logNoPoint();
+            GameLogger.logNoPoint();
         } else {
             aiScore++;
-            logPoint("AI");
+            GameLogger.logPoint("AI");
         }
-        logPrint(" --> (PLAYER: " + playerCoins + " | AI: " + aiCoins + ")\n");
+        GameLogger.logPrint(" --> (PLAYER: " + playerCoins + " | AI: " + aiCoins + ")\n");
         wait(4);
 
         // 3) Settebello
         boolean playerHasSettebello = playerCards.stream().anyMatch(c -> c.getSuit().equals("Coins") && c.getValue() == 7);
-        logPrint(" -Settebello (Seven of Coins) owned by");
+        GameLogger.logPrint(" -Settebello (Seven of Coins) owned by");
         if (playerHasSettebello) {
             playerScore++;
-            logPoint("PLAYER");
+            GameLogger.logPoint("PLAYER");
         } else {
             aiScore++;
-            logPoint("AI");
+            GameLogger.logPoint("AI");
         }
-        logNewline();
+        GameLogger.logNewline();
         wait(4);
 
         // 4) Prime (or "primiera")
@@ -523,29 +523,29 @@ public class GameController {
         ArrayList<Card> aiPrimeCards = new ArrayList<>();
         int playerPrime = calculateBestPrime(playerCards, playerPrimeCards);
         int aiPrime = calculateBestPrime(aiCards, aiPrimeCards);
-        logPrint(" -Best prime owned by");
+        GameLogger.logPrint(" -Best prime owned by");
         if (playerPrime > aiPrime) {
             playerScore++;
-            logPoint("PLAYER");
+            GameLogger.logPoint("PLAYER");
         } else if (aiPrime == playerPrime) {
             aiScore++;
-            logNoPoint();
+            GameLogger.logNoPoint();
         } else {
-            logPoint("AI");
+            GameLogger.logPoint("AI");
         }
-        logPrint("\n(PLAYER: " + playerPrime + " with these " + playerPrimeCards + ")\n(AI: " + aiPrime + " with these " + aiPrimeCards + ")\n");
+        GameLogger.logPrint("\n(PLAYER: " + playerPrime + " with these " + playerPrimeCards + ")\n(AI: " + aiPrime + " with these " + aiPrimeCards + ")\n");
         wait(4);
 
         // Assign points to the gameState scores
-        logAction("Adding points to the players...", 0);
+        GameLogger.logAction("Adding points to the players...", 0);
         gameState.addPlayerScore(playerScore);
         gameState.addAiScore(aiScore);
         wait(4);
 
         // Print the current score updated
-        logAction("Scores updated:", 0);
-        logMessage("PLAYER", "\tscore: " + gameState.getPlayerScore(), 1);
-        logMessage("AI", "\tscore: " + gameState.getAiScore(), 2);
+        GameLogger.logAction("Scores updated:", 0);
+        GameLogger.logMessage("PLAYER", "\tscore: " + gameState.getPlayerScore(), 1);
+        GameLogger.logMessage("AI", "\tscore: " + gameState.getAiScore(), 2);
     }
 
     private int calculateBestPrime(ArrayList<Card> capturedCards, ArrayList<Card> primeCards) {
@@ -575,88 +575,20 @@ public class GameController {
     }
 
     //----------------------------------------------------------------------------------------
-    // Other methods
-
-    private static void wait(int seconds)
-    {
-        try {
-            TimeUnit.SECONDS.sleep(seconds);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    // Test methods
+    private static final boolean SKIP_WAIT = true; // Just for skip the wait() during tests
+    private static void wait(int seconds) {
+        if (!SKIP_WAIT && seconds > 0) {
+            try {
+                TimeUnit.SECONDS.sleep(seconds);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    //----------------------------------------------------------------------------------------
-    // Log methods
-    private void logPrint(String message) {
-        System.out.print(message);
-    }
-
-    private void logNewline() {
-        System.out.println();
-    }
-
-    private void logStartGame() {
-        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
-        System.out.println("|                                                   GAME STARTED                                                    |");
-        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
-    }
-
-    private void logNewRound() {
-        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
-        System.out.println("|                                                    NEW ROUND                                                      |");
-        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
-    }
-
-    private void logEndRound() {
-        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
-        System.out.println("|                                                    END ROUND                                                      |");
-        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
-    }
-
-    private void logTitle(String message) {
-        System.out.println("[" + message + "]");
-    }
-
-    private void logAction(String message, int newlines) {
-        System.out.println("►" + message);
-        for(int i = 0; i < newlines; i++) { System.out.println("\n"); }
-    }
-
-    private void logMessage(String player, String message, int newlines) {
-        System.out.print(" |" + player + "|  " + message);
-        for(int i = 0; i < newlines; i++) { System.out.print("\n"); }
-    }
-
-    private void logCapture(String player, ArrayList<Card> capture, Card card) {
-        System.out.println(" |" + player + "|  captured " + capture + " with the " + card);
-    }
-
-    private void logMove(String player, Card card) {
-        System.out.println(" |" + player + "|  just placed the " + card + " on the table");
-    }
-
-    private void logScopa(String player) {
-        System.out.println(" |" + player + "|  made a Scopa! (+1)");
-    }
-
-    private void logPoint(String player) {
-        System.out.print(" |" + player + "| who gets a point (+1)");
-    }
-
-    private void logNoPoint() {
-        System.out.print(" no one. It's a draw, nobody gets the point;");
-    }
-
-    private void logAiHand() {
-        System.out.print("[▬");
-        for (int i = 1; i < gameState.getAiHand().size(); i++) { System.out.print(", ▬"); }
-        System.out.print("]\n");
-    }
-
-    //----------------------------------------------------------------------------------------
-    // Main test
     public static void main(String[] args) {
         // Here goes any tests to be done for the changes made
     }
+    //
 }
