@@ -16,7 +16,7 @@ public class GameState {
 
     private boolean lastCaptureByPlayer;
 
-    // players scores
+    // Players scores
     private int playerScore;
     private int aiScore;
 
@@ -31,6 +31,7 @@ public class GameState {
         aiScore = 0;
     }
 
+    // Methods
     public void addPlayerScore(int pointsToAdd) {
         playerScore += pointsToAdd;
     }
@@ -39,11 +40,35 @@ public class GameState {
         aiScore += pointsToAdd;
     }
 
-    public void resetPlayerScore (int newScore) {
+    public void clearTableCards() {
+        tableCards.clear();
+    }
+
+    public void clearPlayerHand() {
+        playerCards.clear();
+    }
+
+    public void clearAiHand() {
+        aiCards.clear();
+    }
+
+    public void clearPlayerCapturedCards() {
+        playerCapturedCards.clear();
+    }
+
+    public void clearAiCapturedCards() {
+        aiCapturedCards.clear();
+    }
+
+    public void resetLastCaptureByPlayer() {
+        lastCaptureByPlayer = true;
+    }
+
+    public void resetPlayerScore () {
         playerScore = 0;
     }
 
-    public void resetAiScore (int newScore) {
+    public void resetAiScore () {
         aiScore = 0;
     }
 

@@ -7,36 +7,54 @@ import java.util.Scanner; // Import Scanner for input
 import java.util.concurrent.TimeUnit;
 
 public class GameController {
-    private final NeapolitanDeck deck;
     private final GameState gameState; // The state of the game
+    private NeapolitanDeck deck; // The deck
     private boolean isPlayerTurn; // Indicates if it's the player's turn
+    private static final int winningScore = 11; // Default value, can be changed if needed
 
     private record Pair<T, U>(T first, U second) {} // Used a record to make sure that from the method "getBestCaptureForCard"
                                                     // that should return 2 values (the best capture and its respective score)
 
     // Constructor
     public GameController() {
-        this.deck = new NeapolitanDeck();
         this.gameState = new GameState();
         this.isPlayerTurn = true; // The player always starts, but we can make a random start by the deck
     }
 
     // Starts the game
-    private void startGame() {
+    public void startGame() {
         logStartGame();
+        //gameState.resetGame(); // Reset the game state, including scores and the deck
+        // The game continues until one player reaches the WINNING_SCORE
+        while (gameState.getPlayerScore() < winningScore && gameState.getAiScore() < winningScore) {
+            resetRound();
+            initializeRound();
+            playRound();   // Execute a round of the game
+            // Check if a player has reached the winning score
+            if (gameState.getPlayerScore() >= winningScore || gameState.getAiScore() >= winningScore) {
+                // In case both achieve the same winning score, ends when results are different (one greater than the other)
+                if (gameState.getPlayerScore() != gameState.getAiScore()) {
+                    //announceWinner();
+                    break; // End the game
+                }
+            }
+        }
+        // Outside the while the game ends with final message and choices whether to restart or exit
+        // Maybe even see results, save match...
+    }
+
+    // Initializes a new round by shuffling the deck and dealing cards to players and on the table
+    private void initializeRound() {
+        deck = new NeapolitanDeck();
         logAction("Shuffling deck...", 0);
         deck.shuffleDeck(); // Shuffles the deck
         wait(4);
         logAction("Dealing 3 cards to the player and to AI...", 0);
         dealCardsToPlayers(); // Deals the 3 cards to player and AI
         wait(4);
-        logAction("Dealing 4 cards on the table...", 1);
+        logAction("Dealing 4 cards on the table...", 0);
         dealCardsOnTable(); // Deals the 4 cards on the table
         wait(2);
-        // Here goes the while until one of them reaches the final score
-        playRound();
-        // Outside the while the game ends with final message and choices whether to restart or exit
-        // Maybe even see results, save match...
     }
 
     // Deals the cards (3 to each player)
@@ -69,11 +87,11 @@ public class GameController {
     }
 
     public void playRound() {
-        int turnNumber = 1;
-        String turnString = "TURN " + turnNumber;
         logNewRound();
+        int turnNumber = 1;
         while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
             logPrint("_____________________________________________________________________________________________________________________\n");
+            String turnString = "TURN " + turnNumber;
             logTitle(turnString);
             logAction("TABLE: " + gameState.getTableCards(), 0);
             if (isPlayerTurn) {
@@ -88,11 +106,10 @@ public class GameController {
             logNewline();
             if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
                 turnNumber += 1;
-                turnString = "TURN " + turnNumber;
             }
-            if (checkRoundEnd()) {
+            if (isRoundEnded()) {
                 endRound();
-                calculatePoints(); // Calculate points and reset for the next round
+                calculatePoints(); // Calculates points at the end of every round
             } else {
                 isPlayerTurn = !isPlayerTurn; // Switch to the next turn (player's turn)
             }
@@ -397,7 +414,7 @@ public class GameController {
     }
 
     // Checks if the round is over
-    private boolean checkRoundEnd() {
+    private boolean isRoundEnded() {
         if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) { // If hands have no cards
             // If the deck still has cards, deals more
             if (deck.remainingCards() > 0) {
@@ -430,6 +447,17 @@ public class GameController {
         logEndRound();
     }
 
+    private void resetRound() {
+        logAction("Resetting round for a new match...", 0);
+
+        gameState.clearTableCards();
+        gameState.clearPlayerHand();
+        gameState.clearAiHand();
+        gameState.clearPlayerCapturedCards();
+        gameState.clearAiCapturedCards();
+        gameState.resetLastCaptureByPlayer();
+    }
+
     // Calculates points at the end of the round
     private void calculatePoints() {
         logNewline();
@@ -456,7 +484,7 @@ public class GameController {
             aiScore++;
             logPoint("AI");
         }
-        logPrint("   (PLAYER: " + playerCards.size() + "   |AI: " + aiCards.size() + ")\n");
+        logPrint(" --> (PLAYER: " + playerCards.size() + " | AI: " + aiCards.size() + ")\n");
         wait(4);
 
         // 2) Most of the coins cards
@@ -473,7 +501,7 @@ public class GameController {
             aiScore++;
             logPoint("AI");
         }
-        logPrint("   (PLAYER: " + playerCoins + "   |    AI: " + aiCoins + ")\n");
+        logPrint(" --> (PLAYER: " + playerCoins + " | AI: " + aiCoins + ")\n");
         wait(4);
 
         // 3) Settebello
@@ -486,6 +514,7 @@ public class GameController {
             aiScore++;
             logPoint("AI");
         }
+        logNewline();
         wait(4);
 
         // 4) Prime (or "primiera")
@@ -503,11 +532,11 @@ public class GameController {
         } else {
             logPoint("AI");
         }
-        logPrint("   (PLAYER: " + playerPrime + " with these " + playerPrimeCards + "   |    AI: " + aiPrime + "with these " + aiPrimeCards + ")\n");
+        logPrint("\n(PLAYER: " + playerPrime + " with these " + playerPrimeCards + ")\n(AI: " + aiPrime + " with these " + aiPrimeCards + ")\n");
         wait(4);
 
         // Assign points to the gameState scores
-        logAction("Adding points to the players...", 1);
+        logAction("Adding points to the players...", 0);
         gameState.addPlayerScore(playerScore);
         gameState.addAiScore(aiScore);
         wait(4);
@@ -515,8 +544,7 @@ public class GameController {
         // Print the current score updated
         logAction("Scores updated:", 0);
         logMessage("PLAYER", "\tscore: " + gameState.getPlayerScore(), 1);
-        logMessage("AI", "\tscore: " + gameState.getAiScore(), 1);
-        logNewline();
+        logMessage("AI", "\tscore: " + gameState.getAiScore(), 2);
     }
 
     private int calculateBestPrime(ArrayList<Card> capturedCards, ArrayList<Card> primeCards) {
@@ -628,7 +656,6 @@ public class GameController {
     //----------------------------------------------------------------------------------------
     // Main test
     public static void main(String[] args) {
-        GameController gameController = new GameController();
-        gameController.startGame(); // Will just play a round for now
+        // Here goes any tests to be done for the changes made
     }
 }
