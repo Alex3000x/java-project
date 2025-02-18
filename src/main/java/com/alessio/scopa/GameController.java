@@ -24,25 +24,39 @@ public class GameController {
 
     // Starts the game
     public void startGame() {
-        GameLogger.logStartGame();
-        //gameState.resetGame(); // Reset the game state, including scores and the deck
-        // The game continues until one player reaches the WINNING_SCORE
-        while (gameState.getPlayerScore() < winningScore && gameState.getAiScore() < winningScore) {
-            resetRound();
-            initializeRound();
-            playRound();   // Execute a round of the game
-            // Check if a player has reached the winning score
-            if (gameState.getPlayerScore() >= winningScore || gameState.getAiScore() >= winningScore) {
-                // In case both achieve the same winning score, ends when results are different (one greater than the other)
-                if (gameState.getPlayerScore() != gameState.getAiScore()) {
-                    //announceWinner();
-                    inputPlayer.close(); // Close scanner input of player
-                    break; // End the game
+        do {
+            resetGame();
+            GameLogger.logStartGame();
+            //gameState.resetGame(); // Reset the game state, including scores and the deck
+            // The game continues until one player reaches the WINNING_SCORE
+            while (gameState.getPlayerScore() < winningScore && gameState.getAiScore() < winningScore) {
+                resetRound();
+                initializeRound();
+                playRound();   // Execute a round of the game
+                // Check if a player has reached the winning score
+                if (gameState.getPlayerScore() >= winningScore || gameState.getAiScore() >= winningScore) {
+                    // In case both achieve the same winning score, ends when results are different (one greater than the other)
+                    if (gameState.getPlayerScore() != gameState.getAiScore()) {
+                        break; // End the game
+                    }
                 }
             }
-        }
-        // Outside the while the game ends with final message and choices whether to restart or exit
-        // Maybe even see results, save match...
+            // Outside the while the game ends with final message and choices whether to restart or exit
+            // Maybe even see results, save match...
+            announceWinner(); // Winner announce at the end of the game
+        } while (playAgainOption()); // Asks the player if he wants to make a rematch
+        inputPlayer.close(); // Close scanner input of player, this
+    }
+
+    public void resetGame() {
+        gameState.clearTableCards();
+        gameState.clearPlayerHand();
+        gameState.clearAiHand();
+        gameState.clearPlayerCapturedCards();
+        gameState.clearAiCapturedCards();
+        gameState.resetLastCaptureByPlayer();
+        gameState.resetPlayerScore();
+        gameState.resetAiScore();
     }
 
     // Initializes a new round by shuffling the deck and dealing cards to players and on the table
@@ -573,6 +587,43 @@ public class GameController {
         // Sum the highest prime values of each suit to get the total prime score
         return bestPrimeValues.values().stream().mapToInt(Integer::intValue).sum();
     }
+
+    private void announceWinner() {
+        GameLogger.logNewline();
+        GameLogger.logAction("FINAL SCORES:", 0);
+        GameLogger.logMessage("PLAYER", "Final score: " + gameState.getPlayerScore(), 1);
+        GameLogger.logMessage("AI", "Final score: " + gameState.getAiScore(), 2);
+
+        if (gameState.getPlayerScore() > gameState.getAiScore()) {
+            GameLogger.logPrint(" _______________________\n");
+            GameLogger.logTitle("PLAYER WINS THE GAME!!!");
+            GameLogger.logPrint(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
+        } else {
+            GameLogger.logPrint(" ___________________\n");
+            GameLogger.logTitle("AI WINS THE GAME!!!");
+            GameLogger.logPrint(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
+
+        }
+        GameLogger.logNewline();
+    }
+
+    private boolean playAgainOption() {
+        while (true) {
+            GameLogger.logMessage("PLAYER","-Do you want to play again? (yes/no): ", 0);
+            String choice = inputPlayer.next().trim().toLowerCase();
+            if (choice.equals("yes")) {
+                GameLogger.logAction("Starting a new game...", 1);
+                return true; // The player chooses to do a rematch
+            } else if (choice.equals("no")) {
+                GameLogger.logAction("Leaving the game...", 1);
+                return false; // The player chooses to quit the game
+            } else {
+                GameLogger.logAction("Invalid input. Please type 'yes' or 'no'.", 0);
+            }
+        }
+    }
+
+
 
     //----------------------------------------------------------------------------------------
     // Test methods
