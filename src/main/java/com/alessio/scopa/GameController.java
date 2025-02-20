@@ -255,7 +255,8 @@ public class GameController {
                 // If this current score is the best found, update the choice
                 if (score > bestScore) {
                     bestScore = score; // This current score become the best score
-                    bestCapture = new ArrayList<>(capture); // And so also the capture become the best capture
+                    bestCapture.clear(); // Empty the actual list instead of creating a new one (bestCapture = new ArrayList<>(capture);)
+                    bestCapture.addAll(capture); // And so also the capture become the best capture
                 }
             }
         }
