@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="SCOPE_TYPE" value="3" />
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e865b6eb-7b0e-433f-9733-7864d9ee3c3c" name="Changes" comment="Removed JFrame and Listener libraries/dependencies;&#10;Added constructor and private methods for:&#10;1. Starting the game (startGame),&#10;2. Distribution cards (dealCards...),&#10;3. Round and turn management between player and computer (playRound/playerMove/aiMove),&#10;4. Basic logic of possible catches (findPossibleCaptures),&#10;5. Round end (checkRoundEnd/endRound),&#10;6. Log, print and main test methods for debugging.&#10;&#10;P.S. Currently no point calculation, no player choice and no AI logic implemented">
+    <list default="true" id="e865b6eb-7b0e-433f-9733-7864d9ee3c3c" name="Changes" comment="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState.">
       <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/fileHashes/fileHashes.bin" afterDir="false" />
@@ -13,8 +16,11 @@
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/Combinazioni.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/GameState.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/GameState.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/Main.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" afterPath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/alessio/scopa/Combinazioni.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,29 +64,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "D:/IdeaProjects/java-project",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "project.structure.last.edited": "SDKs",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/IdeaProjects/java-project&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.language&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "ChangesTree.GroupingKeys": [
-      "directory",
-      "module"
+  &quot;keyToStringList&quot;: {
+    &quot;ChangesTree.GroupingKeys&quot;: [
+      &quot;directory&quot;,
+      &quot;module&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\aless\IdeaProjects\java-project\src\main\java\com\alessio\scopa" />
@@ -90,7 +96,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.GameController">
+  <component name="RunManager" selected="Application.Main">
     <configuration name="Carta" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.alessio.scopa.Carta" />
       <module name="java-project.main" />
@@ -180,7 +186,20 @@
       <workItem from="1737394935068" duration="4599000" />
       <workItem from="1737908302116" duration="7422000" />
       <workItem from="1737988609279" duration="10880000" />
-      <workItem from="1738077396098" duration="4792000" />
+      <workItem from="1738077396098" duration="12268000" />
+      <workItem from="1738255481012" duration="9220000" />
+      <workItem from="1738410973624" duration="12540000" />
+      <workItem from="1738597330509" duration="15526000" />
+      <workItem from="1738688025750" duration="11440000" />
+      <workItem from="1738778846996" duration="11960000" />
+      <workItem from="1739186586164" duration="12560000" />
+      <workItem from="1739289380704" duration="12243000" />
+      <workItem from="1739381656095" duration="7501000" />
+      <workItem from="1739462475413" duration="20437000" />
+      <workItem from="1739635440828" duration="13684000" />
+      <workItem from="1739897625963" duration="3939000" />
+      <workItem from="1740072663986" duration="6308000" />
+      <workItem from="1740260215823" duration="424000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <created>1737395269960</created>
@@ -203,7 +222,105 @@
       <option name="project" value="LOCAL" />
       <updated>1738084417095</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Update of build/gradle file">
+      <created>1738084671445</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1738084671445</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Added a generic method for the player and AI move and removed the duplication; optimized print and log messages to reduce repetitions">
+      <created>1738099622566</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1738099622566</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Added method to allow the choice of card to the player;&#10;Added method of wait to emulate game timing;&#10;Small corrections to log messages">
+      <created>1738267120835</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1738267120835</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Added method that implements a more intelligent AI decision logic based on some priorities in the choice of card to play">
+      <created>1738693904925</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1738693904925</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Added rule for which the last take does not count as an additional point (scopa); Added rule for the distribution at the end of the round of the last table cards to the last one that have a capture&#10;Small corrections to log messages and prints and comments">
+      <created>1738699455359</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1738699455359</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Refactoring: Extracted AI decision-making logic into a dedicated method&#10;Created `getBestCaptureForCard()` and `getDiscardCardScore()` methods to evaluate the best capture or best discard for a given card;&#10;Updated `chooseAiCard()` to use the new methods and reducing code duplication;&#10;`bestCapture` is now determined in a cleaner and more structured way.">
+      <created>1739212782132</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1739212782132</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Implemented the rule where if an identical card is present on the table, it must be captured instead of other possible options; Improved AI decision-making by considering the identical card rule before selecting the card to play; Adjusted player capture choices to respect the identical card rule when applicable&#10;Fixed an issue for the last-turn capture not scopa;&#10;Small corrections to log messages">
+      <created>1739302027363</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1739302027363</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Implemented round-end scoring by updating `calculatePoints()` to correctly calculate and assign points&#10;Added `calculateBestPrime()` method to compute best prime value based on the highest prime-value per suit;&#10;Introduced new log messages of start round, end round and score details;&#10;Renamed score update methods in `GameState` for better clarity;&#10;Small corrections to log messages and comments.">
+      <created>1739473906509</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1739473906509</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Added multi-round game flow and improved game state management&#10;&#10;- Introduced a static variable `winningScore` to define the victory threshold, allowing customization;&#10;- Implemented `resetRound()` to properly clear game state before a new round starts;&#10;- Moved round initialization logic from `startGame()` to a new method `initializeRound()` for better re-usability;&#10;- Added a loop in `startGame()` that continues playing rounds until a player reaches the winning score;&#10;- Renamed methods and adjusted log messages for better readability and debugging;&#10;- Added new `clear` and `reset` methods in `GameState.java` to handle proper state resets after each round;&#10;- Moved the game start test from `GameController.java` to `Main.java` for better separation of concerns and easier testing.">
+      <created>1739638699001</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1739638699001</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Optimized Scanner usage and closing to improve memory management and prevents potential resource leaks">
+      <created>1739639729008</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1739639729008</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Refactored logging system and solved a Scanner error&#10;&#10;- Moved all logging methods from GameController to a new GameLogger class for better separation of concerns and updated GameController to use GameLogger methods for all log-related operations;&#10;- Replaced multiple Scanner instances with a single global Scanner (inputPlayer) and now it closed only at the end of the game to prevent NoSuchElementException errors;&#10;- Removed try-with-resources and unnecessary scanner.close() calls inside methods;">
+      <created>1739657117456</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1739657117456</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added winner announcement and rematch/quit option in endgame&#10;&#10;- Implemented announceWinner() to display the final scores and declare the winner;&#10;- Added playAgainOption() to allow the player to choose between replaying or exiting after the game ends;&#10;- Updated startGame() to loop and reset the game state if the player chooses to play again;&#10;- Added resetGame() method to reset the current game, including scores, to play a new game.">
+      <created>1739903209729</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1739903209729</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Optimized getBestCaptureForCard() by replacing the unnecessary new ArrayList instance with the clear method on the same list">
+      <created>1740075955590</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1740075955590</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState.">
+      <created>1740260634148</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1740260634148</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -224,6 +341,20 @@
     <MESSAGE value="First commit" />
     <MESSAGE value="Translated in english other terms and names remained in italian; in GameState added missing methods/getter/setter necessary for the operation of GameController" />
     <MESSAGE value="Removed JFrame and Listener libraries/dependencies;&#10;Added constructor and private methods for:&#10;1. Starting the game (startGame),&#10;2. Distribution cards (dealCards...),&#10;3. Round and turn management between player and computer (playRound/playerMove/aiMove),&#10;4. Basic logic of possible catches (findPossibleCaptures),&#10;5. Round end (checkRoundEnd/endRound),&#10;6. Log, print and main test methods for debugging.&#10;&#10;P.S. Currently no point calculation, no player choice and no AI logic implemented" />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed JFrame and Listener libraries/dependencies;&#10;Added constructor and private methods for:&#10;1. Starting the game (startGame),&#10;2. Distribution cards (dealCards...),&#10;3. Round and turn management between player and computer (playRound/playerMove/aiMove),&#10;4. Basic logic of possible catches (findPossibleCaptures),&#10;5. Round end (checkRoundEnd/endRound),&#10;6. Log, print and main test methods for debugging.&#10;&#10;P.S. Currently no point calculation, no player choice and no AI logic implemented" />
+    <MESSAGE value="Update of build/gradle file" />
+    <MESSAGE value="Added a generic method for the player and AI move and removed the duplication; optimized print and log messages to reduce repetitions" />
+    <MESSAGE value="Added method to allow the choice of card to the player;&#10;Added method of wait to emulate game timing;&#10;Small corrections to log messages" />
+    <MESSAGE value="Added method that implements a more intelligent AI decision logic based on some priorities in the choice of card to play" />
+    <MESSAGE value="Added rule for which the last take does not count as an additional point (scopa); Added rule for the distribution at the end of the round of the last table cards to the last one that have a capture&#10;Small corrections to log messages and prints and comments" />
+    <MESSAGE value="Refactoring: Extracted AI decision-making logic into a dedicated method&#10;Created `getBestCaptureForCard()` and `getDiscardCardScore()` methods to evaluate the best capture or best discard for a given card;&#10;Updated `chooseAiCard()` to use the new methods and reducing code duplication;&#10;`bestCapture` is now determined in a cleaner and more structured way." />
+    <MESSAGE value="Implemented the rule where if an identical card is present on the table, it must be captured instead of other possible options; Improved AI decision-making by considering the identical card rule before selecting the card to play; Adjusted player capture choices to respect the identical card rule when applicable&#10;Fixed an issue for the last-turn capture not scopa;&#10;Small corrections to log messages" />
+    <MESSAGE value="Implemented round-end scoring by updating `calculatePoints()` to correctly calculate and assign points&#10;Added `calculateBestPrime()` method to compute best prime value based on the highest prime-value per suit;&#10;Introduced new log messages of start round, end round and score details;&#10;Renamed score update methods in `GameState` for better clarity;&#10;Small corrections to log messages and comments." />
+    <MESSAGE value="Added multi-round game flow and improved game state management&#10;&#10;- Introduced a static variable `winningScore` to define the victory threshold, allowing customization;&#10;- Implemented `resetRound()` to properly clear game state before a new round starts;&#10;- Moved round initialization logic from `startGame()` to a new method `initializeRound()` for better re-usability;&#10;- Added a loop in `startGame()` that continues playing rounds until a player reaches the winning score;&#10;- Renamed methods and adjusted log messages for better readability and debugging;&#10;- Added new `clear` and `reset` methods in `GameState.java` to handle proper state resets after each round;&#10;- Moved the game start test from `GameController.java` to `Main.java` for better separation of concerns and easier testing." />
+    <MESSAGE value="Optimized Scanner usage and closing to improve memory management and prevents potential resource leaks" />
+    <MESSAGE value="Refactored logging system and solved a Scanner error&#10;&#10;- Moved all logging methods from GameController to a new GameLogger class for better separation of concerns and updated GameController to use GameLogger methods for all log-related operations;&#10;- Replaced multiple Scanner instances with a single global Scanner (inputPlayer) and now it closed only at the end of the game to prevent NoSuchElementException errors;&#10;- Removed try-with-resources and unnecessary scanner.close() calls inside methods;" />
+    <MESSAGE value="Added winner announcement and rematch/quit option in endgame&#10;&#10;- Implemented announceWinner() to display the final scores and declare the winner;&#10;- Added playAgainOption() to allow the player to choose between replaying or exiting after the game ends;&#10;- Updated startGame() to loop and reset the game state if the player chooses to play again;&#10;- Added resetGame() method to reset the current game, including scores, to play a new game." />
+    <MESSAGE value="Optimized getBestCaptureForCard() by replacing the unnecessary new ArrayList instance with the clear method on the same list" />
+    <MESSAGE value="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState." />
   </component>
 </project>
