@@ -24,6 +24,7 @@ public class GameController {
 
     // Starts the game
     public void startGame() {
+        askPlayerName();
         do {
             resetGame();
             GameLogger.logStartGame();
@@ -46,6 +47,16 @@ public class GameController {
             announceWinner(); // Winner announce at the end of the game
         } while (playAgainOption()); // Asks the player if he wants to make a rematch
         inputPlayer.close(); // Close scanner input of player, this
+    }
+
+    private void askPlayerName() {
+        GameLogger.logAction("Enter your name:", 0);
+        String name = inputPlayer.nextLine().trim();
+
+        if (!name.isEmpty()) {
+            gameState.setPlayerName(name);
+        }
+        GameLogger.logMessage(name, ", welcome to a new game of Scopa!", 1);
     }
 
     public void resetGame() {
