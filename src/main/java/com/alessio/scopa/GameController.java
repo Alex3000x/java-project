@@ -19,16 +19,17 @@ public class GameController {
     // Constructor
     public GameController() {
         this.gameState = new GameState();
-        this.isPlayerTurn = true; // The player always starts, but we can make a random start by the deck
     }
 
     // Starts the game
     public void startGame() {
         askPlayerName();
         do {
-            resetGame();
             GameLogger.logStartGame();
-            //gameState.resetGame(); // Reset the game state, including scores and the deck
+            deck = new NeapolitanDeck();
+            deck.shuffleDeck();
+            determineDealer();
+            resetGame();    // Reset the game state, including scores and the deck
             // The game continues until one player reaches the WINNING_SCORE
             while (gameState.getPlayerScore() < winningScore && gameState.getAiScore() < winningScore) {
                 resetRound();
@@ -46,10 +47,12 @@ public class GameController {
             // Maybe even see results, save match...
             announceWinner(); // Winner announce at the end of the game
         } while (playAgainOption()); // Asks the player if he wants to make a rematch
-        inputPlayer.close(); // Close scanner input of player, this
+        inputPlayer.close(); // Close scanner input of player
     }
 
     private void askPlayerName() {
+        GameLogger.logNewline();
+        GameLogger.logNewline();
         GameLogger.logAction("Enter your name:", 0);
         String playerName = inputPlayer.nextLine().trim();
 
@@ -57,6 +60,33 @@ public class GameController {
             gameState.setPlayerName(playerName);
         }
         GameLogger.logPrint("Hi " + gameState.getPlayerName() + ", welcome to a new game of Scopa!\n");
+    }
+
+    private void determineDealer() {
+        GameLogger.logAction("Determining the dealer...", 0);
+        wait(2);
+
+        GameLogger.logMessage(gameState.getPlayerName(), ", draw a card at random between the 40 cards in the deck (enter a number between 1 and 40): ", 0);
+        int playerChoice = inputPlayer.nextInt();
+        Card playerCard = deck.drawCard(playerChoice);
+        GameLogger.logAction("You drew a " + playerCard, 0);
+
+        GameLogger.logAction("AI is going to draw a card at random in the deck", 0);
+        wait(4);
+        Card aiCard = deck.drawCard();
+        GameLogger.logAction("AI drew a " + aiCard, 0);
+        wait(1); GameLogger.logPrint("."); wait(1); GameLogger.logPrint("."); wait(1); GameLogger.logPrint("."); wait(2); GameLogger.logNewline();
+
+        if (playerCard.getValue() > aiCard.getValue()) {
+            isPlayerTurn = true;
+            GameLogger.logAction(playerCard + "(your) is greater than the " + aiCard + "(AI)", 0);
+            GameLogger.logAction("AI will be the dealer and " + gameState.getPlayerName() + " starts first!", 1);
+        } else {
+            isPlayerTurn = false;
+            GameLogger.logAction(aiCard + "(AI) is greater than the " + playerCard + "(your)", 0);
+            GameLogger.logAction(gameState.getPlayerName() + " will be the dealer and AI starts first!", 1);
+        }
+        wait(4);
     }
 
     public void resetGame() {
@@ -72,7 +102,7 @@ public class GameController {
 
     // Initializes a new round by shuffling the deck and dealing cards to players and on the table
     private void initializeRound() {
-        deck = new NeapolitanDeck();
+        deck.resetDeck();
         GameLogger.logAction("Shuffling deck...", 0);
         deck.shuffleDeck(); // Shuffles the deck
         wait(4);

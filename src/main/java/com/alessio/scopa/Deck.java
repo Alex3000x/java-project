@@ -22,12 +22,20 @@ public abstract class Deck {
         Collections.shuffle(cards);
     }
 
-    // Draws a card from deck
+    // Draws the first card from deck
     public Card drawCard() {
         if (cards.isEmpty()) {
             throw new IllegalStateException("The deck is empty!");
         }
         return cards.remove(0); // Removes and returns first card of deck
+    }
+
+    // Draws a card in a specific index from deck
+    public Card drawCard(int index) {
+        if (cards.isEmpty()) {
+            throw new IllegalStateException("The deck is empty!");
+        }
+        return cards.remove(index); // Removes and returns the index card of deck
     }
 
     // Resets the deck (empties, reinitializes and shuffles)
