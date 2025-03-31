@@ -15,7 +15,7 @@ public class GameState {
     private ArrayList<Card> aiCapturedCards;
 
     private boolean lastCaptureByPlayer;
-    private String playerName = "PLAYER"; // Default name
+    private String playerName;
 
     // Players scores
     private int playerScore;

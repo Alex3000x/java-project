@@ -1,20 +1,17 @@
 package com.alessio.scopa;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner; // Import Scanner for input
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.Random;
 
 public class GameController {
     private final GameState gameState; // The state of the game
     private final InputManager inputManager;    // For the quit choice in every input
     private static final Scanner inputPlayer = new Scanner(System.in);
-    private static final int winningScore = 11; // Default value, can be changed if needed
+    private static int winningScore = 11; // Default value, can be changed if needed
     private NeapolitanDeck deck; // The deck
     private boolean isPlayerTurn; // Indicates if it's the player's turn
     private boolean quitToMenu; // To decree if player want to return to the main menu
+    private boolean playAgainVariable;
 
     private record Pair<T, U>(T first, U second) {} // Used a record to make sure that from the method "getBestCaptureForCard"
                                                     // that should return 2 values (the best capture and its respective score)
@@ -29,6 +26,8 @@ public class GameController {
     public void startGame() {
         askPlayerName();
         do {
+            playAgainVariable = false;
+            if (quitToMenu) break; // If player choose to quit the game and go back to the menu
             GameLogger.logStartGame();
             deck = new NeapolitanDeck();
             deck.shuffleDeck();
@@ -47,66 +46,65 @@ public class GameController {
                         announceWinner(); // Winner announce at the end of the game
                         break; // End the game
                     }
+                    winningScore = gameState.getPlayerScore() + 1;
                 }
             }
             if (quitToMenu) break; // The second break if player quit the game to exit the second cycle
             // Maybe here even see results, save match...
-        } while (playAgainOption()); // Asks the player if he wants to make a rematch
+            showEndGameMenu();
+        } while (playAgainVariable); // Asks the player if he wants to make a rematch
     }
 
     private void askPlayerName() {
-        GameLogger.logNewline();
-        GameLogger.logNewline();
-        GameLogger.logAction("Enter your name:", 0);
+        GameLogger.logNewline(16);
+        GameLogger.logAction("Enter your name: ", 0);
         String playerName = inputPlayer.nextLine().trim();
 
         if (!playerName.isEmpty()) {
             gameState.setPlayerName(playerName);
         }
-        GameLogger.logPrint("Hi " + gameState.getPlayerName() + ", welcome to a new game of Scopa!\n");
+        GameLogger.logPrint("Hi " + gameState.getPlayerName() + ", welcome to a new game of Scopa!\n\n");
     }
 
     private void determineDealer() {
-        GameLogger.logAction("Determining the dealer...", 0);
+        GameLogger.logAction("Determining the dealer...", 1);
         wait(2);
 
         while (true) {
-            String input = inputManager.readLineWithQuit(gameState.getPlayerName(), ", choose a card to draw at random between the 40 cards in the deck (enter a number between 1 and 40): ");
+            String input = inputManager.readLineWithQuit(gameState.getPlayerName(), "-Choose a card to draw at random between the 40 cards in the deck (enter a number between 1 and 40): ");
             if (input == null) return;
             try {
                 int choice = Integer.parseInt(input);   // Integer to indicate the card
                 if (choice >= 1 && choice <= 40) {   // Valid input
                     Card playerCardDrawn = deck.drawCard(choice - 1);
-                    GameLogger.logAction("You drew a " + playerCardDrawn, 0);
-
-                    GameLogger.logAction("AI is going to draw a card at random in the deck", 0);
+                    GameLogger.logMessage(gameState.getPlayerName()," -You drew a " + playerCardDrawn + ", now AI is going to draw a card at random in the deck", 1);
                     wait(4);
                     Random random = new Random();
                     Card aiCardDrawn = deck.drawCard(random.nextInt(38));
-                    GameLogger.logAction("AI drew a " + aiCardDrawn, 0);
+                    GameLogger.logMessage(gameState.getPlayerName(), " -AI drew a " + aiCardDrawn, 1);
+                    wait(1);
+                    GameLogger.logPrint("  .");
                     wait(1);
                     GameLogger.logPrint(".");
                     wait(1);
                     GameLogger.logPrint(".");
-                    wait(1);
-                    GameLogger.logPrint(".");
-                    wait(2);
-                    GameLogger.logNewline();
+                    wait(3);
+                    GameLogger.logNewline(1);
 
                     if (playerCardDrawn.getValue() > aiCardDrawn.getValue()) {
                         isPlayerTurn = true;
-                        GameLogger.logAction(playerCardDrawn + "(your) is greater than the " + aiCardDrawn + "(AI)", 0);
-                        GameLogger.logAction("AI will be the dealer and " + gameState.getPlayerName() + " starts first!", 1);
+                        GameLogger.logMessage(gameState.getPlayerName(), " -Your " + playerCardDrawn + " is greater than the AI's " + aiCardDrawn, 1);
+                        GameLogger.logMessage(gameState.getPlayerName(), " -AI will be the dealer and " + gameState.getPlayerName() + " starts first!", 2);
                     } else {
                         isPlayerTurn = false;
-                        GameLogger.logAction(aiCardDrawn + "(AI) is greater than the " + playerCardDrawn + "(your)", 0);
-                        GameLogger.logAction(gameState.getPlayerName() + " will be the dealer and AI starts first!", 1);
+                        GameLogger.logMessage(gameState.getPlayerName(), " -AI's " + aiCardDrawn + " is greater than your " + playerCardDrawn, 1);
+                        GameLogger.logMessage(gameState.getPlayerName(), " -" + gameState.getPlayerName() + " will be the dealer and AI starts first!", 2);
                     }
                     wait(4);
                     break;
                 }
             } catch (NumberFormatException e) {
-                GameLogger.logAction("Invalid input. Please try again.", 0);
+                GameLogger.logAction("Invalid input. Please try again.", 1);
             }
         }
     }
@@ -125,13 +123,13 @@ public class GameController {
     // Initializes a new round by shuffling the deck and dealing cards to players and on the table
     private void initializeRound() {
         deck.resetDeck();
-        GameLogger.logAction("Shuffling deck...", 0);
+        GameLogger.logAction("Shuffling deck...", 1);
         deck.shuffleDeck(); // Shuffles the deck
         wait(4);
-        GameLogger.logAction("Dealing 3 cards to the player and to AI...", 0);
+        GameLogger.logAction("Dealing 3 cards to the player and to AI...", 1);
         dealCardsToPlayers(); // Deals the 3 cards to player and AI
         wait(4);
-        GameLogger.logAction("Dealing 4 cards on the table...", 0);
+        GameLogger.logAction("Dealing 4 cards on the table...", 1);
         dealCardsOnTable(); // Deals the 4 cards on the table
         wait(2);
     }
@@ -166,13 +164,15 @@ public class GameController {
     }
 
     public void playRound() {
+        GameLogger.logNewline(1);
         GameLogger.logNewRound();
+        GameLogger.logNewline(1);
         int turnNumber = 1;
         while (deck.remainingCards() > 0 || !gameState.getPlayerHand().isEmpty() || !gameState.getAiHand().isEmpty()) {
             GameLogger.logPrint("_____________________________________________________________________________________________________________________\n");
             String turnString = "TURN " + turnNumber;
             GameLogger.logTitle(turnString);
-            GameLogger.logAction("TABLE: " + gameState.getTableCards(), 0);
+            GameLogger.logAction("TABLE: " + gameState.getTableCards(), 1);
             if (isPlayerTurn) {
                 Card selectedPlayerCard = selectPlayerCard(); // Card selection from player
                 if (quitToMenu) break;
@@ -183,7 +183,7 @@ public class GameController {
                 GameLogger.logMessage("AI", "choose to play the " + selectedAiCard, 1);
                 aiMove(selectedAiCard);
             }
-            GameLogger.logNewline();
+            GameLogger.logNewline(1);
             if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) {
                 turnNumber += 1;
             }
@@ -201,7 +201,7 @@ public class GameController {
             ArrayList<Card> playerHand = gameState.getPlayerHand();
 
             // Shows available cards in the player's hand
-            GameLogger.logAction("Your hand:", 0);
+            GameLogger.logAction("Your hand:", 1);
             for (int i = 0; i < playerHand.size(); i++) {
                 GameLogger.logPrint((i + 1) + ") " + playerHand.get(i) + "\n");
             }
@@ -217,7 +217,7 @@ public class GameController {
                     return playerHand.get(choice - 1);  // Return the chosen card in the player's hand
                 }
             } catch (NumberFormatException e) {
-                GameLogger.logAction("Invalid input. Please try again.", 0);
+                GameLogger.logAction("Invalid input. Please try again.", 1);
             }
         }
     }
@@ -487,7 +487,7 @@ public class GameController {
                 }
             }
             inputPlayer.nextLine(); // Clean the scanner buffer
-            GameLogger.logAction("Invalid choice. Try again.", 0);
+            GameLogger.logAction("Invalid choice. Try again.", 1);
         }
         return possibleCaptures.get(captureChoice - 1);
     }
@@ -497,7 +497,8 @@ public class GameController {
         if (gameState.getPlayerHand().isEmpty() && gameState.getAiHand().isEmpty()) { // If hands have no cards
             // If the deck still has cards, deals more
             if (deck.remainingCards() > 0) {
-                GameLogger.logAction("New distribution of cards", 0);
+                GameLogger.logNewline(2);
+                GameLogger.logAction("New distribution of cards", 2);
                 dealCardsToPlayers(); // Deals new cards to player and AI
                 return false;
             }
@@ -519,17 +520,17 @@ public class GameController {
             } else {
                 gameState.getAiCapturedCards().addAll(gameState.getTableCards());
             }
-            GameLogger.logAction("Giving the remaining table cards " + gameState.getTableCards().toString() + " to " + (gameState.isLastCaptureByPlayer() ? gameState.getPlayerName() : "AI"), 0);
+            GameLogger.logAction("Giving the remaining table cards " + gameState.getTableCards().toString() + " to " + (gameState.isLastCaptureByPlayer() ? gameState.getPlayerName() : "AI"), 1);
             gameState.getTableCards().clear(); // Clear table
         } else {
-        GameLogger.logAction("Table clear, nobody collects cards from it", 0);
+        GameLogger.logAction("Table clear, nobody collects cards from it", 1);
         }
-        GameLogger.logNewline();
+        GameLogger.logNewline(1);
         GameLogger.logEndRound();
     }
 
     private void resetRound() {
-        GameLogger.logAction("Resetting round for a new match...", 0);
+        GameLogger.logAction("Resetting round for a new match...", 1);
 
         gameState.clearTableCards();
         gameState.clearPlayerHand();
@@ -541,8 +542,8 @@ public class GameController {
 
     // Calculates points at the end of the round
     private void calculatePoints() {
-        GameLogger.logNewline();
-        GameLogger.logAction("Calculating points for this round...", 0);
+        GameLogger.logNewline(1);
+        GameLogger.logAction("Calculating points for this round...", 1);
         wait(4);
 
         ArrayList<Card> playerCards = gameState.getPlayerCapturedCards();
@@ -595,7 +596,7 @@ public class GameController {
             aiScore++;
             GameLogger.logPoint("AI");
         }
-        GameLogger.logNewline();
+        GameLogger.logNewline(1);
         wait(4);
 
         // 4) Prime (or "primiera")
@@ -613,17 +614,17 @@ public class GameController {
         } else {
             GameLogger.logPoint("AI");
         }
-        GameLogger.logPrint("\n(" + gameState.getPlayerName() + ": " + playerPrime + " with these " + playerPrimeCards + ")\n(AI: " + aiPrime + " with these " + aiPrimeCards + ")\n");
+        GameLogger.logPrint("\n\t\t\t(" + gameState.getPlayerName() + ": " + playerPrime + " with these " + playerPrimeCards + ")\n\t\t\t(AI: " + aiPrime + " with these " + aiPrimeCards + ")\n");
         wait(4);
 
         // Assign points to the gameState scores
-        GameLogger.logAction("Adding points to the players...", 0);
+        GameLogger.logAction("Adding points to the players...", 2);
         gameState.addPlayerScore(playerScore);
         gameState.addAiScore(aiScore);
         wait(4);
 
         // Print the current score updated
-        GameLogger.logAction("Scores updated:", 0);
+        GameLogger.logAction("Scores updated:", 1);
         GameLogger.logMessage(gameState.getPlayerName(), "\tscore: " + gameState.getPlayerScore(), 1);
         GameLogger.logMessage("AI", "\tscore: " + gameState.getAiScore(), 2);
     }
@@ -655,38 +656,67 @@ public class GameController {
     }
 
     private void announceWinner() {
-        GameLogger.logNewline();
-        GameLogger.logAction("FINAL SCORES:", 0);
+        GameLogger.logNewline(1);
+        GameLogger.logGameOver();
+        GameLogger.logNewline(1);
+        GameLogger.logAction("FINAL SCORES:", 1);
         GameLogger.logMessage(gameState.getPlayerName(), "Final score: " + gameState.getPlayerScore(), 1);
         GameLogger.logMessage("AI", "Final score: " + gameState.getAiScore(), 2);
 
         if (gameState.getPlayerScore() > gameState.getAiScore()) {
-            GameLogger.logPrint(" ____________________\n");
-            GameLogger.logTitle("YOU WINS THE GAME!!!");
-            GameLogger.logPrint(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
+            GameLogger.logPrint(" _____________________\n");
+            GameLogger.logMessage("YOU WIN THE GAME!!!", "",1);
+            GameLogger.logPrint(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
         } else {
-            GameLogger.logPrint(" ___________________\n");
-            GameLogger.logTitle("AI WINS THE GAME!!!");
-            GameLogger.logPrint(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
+            GameLogger.logPrint(" _____________________\n");
+            GameLogger.logMessage("AI WINS THE GAME!!!","",1);
+            GameLogger.logPrint(" ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n");
 
         }
-        GameLogger.logNewline();
+        GameLogger.logNewline(1);
     }
 
     private boolean playAgainOption() {
         while (true) {
             GameLogger.logMessage(gameState.getPlayerName(),"-Do you want to play again? (yes/no): ", 0);
-            String choice = inputPlayer.next().trim().toLowerCase();
+            String choice = inputPlayer.nextLine().trim().toLowerCase();
             if (choice.equals("yes")) {
                 GameLogger.logAction("Starting a new game...", 1);
                 return true; // The player chooses to do a rematch
             } else if (choice.equals("no")) {
-                GameLogger.logAction("Leaving the game...", 1);
-                return false; // The player chooses to quit the game
+                GameLogger.logNewline(14);
+                GameLogger.logAction("Returning to end-game menu...", 1);
+                GameLogger.logNewline(1);
+                return false; // The player chooses to don't do a rematch
             } else {
-                GameLogger.logAction("Invalid input. Please type 'yes' or 'no'.", 0);
+                GameLogger.logAction("Invalid input. Please type 'yes' or 'no'.", 1);
             }
         }
+    }
+
+    private void showEndGameMenu() {
+        do {
+            GameLogger.logEndGameMenu();
+            String choice = inputManager.readLineWithQuit(gameState.getPlayerName(), "-Choose an option: ");
+
+            switch (choice) {
+                case "1" -> playAgainVariable = playAgainOption(); // Set the variable to say if player chosen a rematch
+                case "2" -> {
+                    //displayFinalStatistic(); // Print final statistic method
+                    GameLogger.logAction("There will be the statistics.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.", 2);
+                    do {
+                        choice = inputManager.readLineWithQuit(gameState.getPlayerName(), "-Digit 'back' to return to the menu: ");
+                    } while (!Objects.equals(choice, "back"));
+                    GameLogger.logNewline(14);
+                    GameLogger.logAction("Returning to end-game menu...", 1);
+                    GameLogger.logNewline(1);
+                }
+                case "3" -> setQuitToMenu(true); // Come back to main menu
+                default -> System.out.println("Invalid choice. Please enter 1 to 3.");
+            }
+
+        } while (!playAgainVariable && !quitToMenu);
+        GameLogger.logNewline(14);
     }
 
     public void setQuitToMenu(boolean quit) {

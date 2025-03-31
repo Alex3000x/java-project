@@ -6,9 +6,8 @@ public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         while (true) {
-            System.out.println("*-------------------------------------------*");
-            System.out.println("|         WELCOME TO SCOPA GAME!           |");
-            System.out.println("*-------------------------------------------*");
+            GameLogger.logNewline(14);
+            GameLogger.logMainMenu();
             while (true) {
                 System.out.println("1) Start Game");
                 System.out.println("2) Exit");

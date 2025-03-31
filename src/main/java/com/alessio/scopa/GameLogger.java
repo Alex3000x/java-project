@@ -9,13 +9,25 @@ public class GameLogger {
         System.out.print(message);
     }
 
-    public static void logNewline() {
-        System.out.println();
+    public static void logNewline(int numberLines) {
+        for(int i = 0; i < numberLines; i++) System.out.println();
+    }
+
+    public static void logMainMenu() {
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+        System.out.println("|                                              WELCOME TO SCOPA GAME!                                               |");
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
     }
 
     public static void logStartGame() {
         System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
         System.out.println("|                                                   GAME STARTED                                                    |");
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+    }
+
+    public static void logGameOver() {
+        System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
+        System.out.println("|                                                    GAME OVER                                                      |");
         System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
     }
 
@@ -31,13 +43,20 @@ public class GameLogger {
         System.out.println("*-------------------------------------------------------------------------------------------------------------------*");
     }
 
+    public static void logEndGameMenu() {
+        System.out.println("*---------------- END GAME MENU ----------------*");
+        System.out.println("1) Play another match");
+        System.out.println("2) View match statistics");
+        System.out.println("3) Return to main menu");
+    }
+
     public static void logTitle(String message) {
         System.out.println("[" + message + "]");
     }
 
     public static void logAction(String message, int newlines) {
-        System.out.println("►" + message);
-        for(int i = 0; i < newlines; i++) { System.out.println("\n"); }
+        System.out.print("►" + message);
+        for(int i = 0; i < newlines; i++) { System.out.print("\n"); }
     }
 
     public static void logMessage(String player, String message, int newlines) {
@@ -47,14 +66,17 @@ public class GameLogger {
 
     public static void logCapture(String player, ArrayList<Card> capture, Card card) {
         System.out.println(" |" + player + "|  captured " + capture + " with the " + card);
+        logNewline(1);
     }
 
     public static void logMove(String player, Card card) {
         System.out.println(" |" + player + "|  just placed the " + card + " on the table");
+        logNewline(1);
     }
 
     public static void logScopa(String player) {
         System.out.println(" |" + player + "|  made a Scopa! (+1)");
+        logNewline(1);
     }
 
     public static void logPoint(String player) {

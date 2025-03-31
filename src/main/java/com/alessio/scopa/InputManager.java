@@ -21,12 +21,13 @@ public class InputManager {
                 GameLogger.logAction("Are you sure you want to quit and return to the main menu? (yes/no): ", 0);
                 String confirm = scanner.nextLine().trim().toLowerCase();
                 if (confirm.equals("yes")) {
-                    GameLogger.logAction("Returning to main menu...", 1);
+                    GameLogger.logAction("Returning to main menu...", 0);
                     wait(2);
+                    GameLogger.logNewline(14);
                     controller.setQuitToMenu(true);  // Notify to GameController
                     return null;    // Exit the selection and the stream detects it
                 } else {
-                    System.out.println("Returning to game.");
+                    GameLogger.logAction("Returning to game.", 1);
                     wait(0);
                     continue;   // Back to ask the player the input
                 }
