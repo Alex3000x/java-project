@@ -1,14 +1,18 @@
 package com.alessio.scopa;
 
+import com.alessio.scopa.enums.EarnedBy;
+import com.alessio.scopa.enums.PointType;
+
 import java.util.ArrayList;
+import java.util.EnumMap;
 
 public class GameState {
     // Cards on the table
     private ArrayList<Card> tableCards;
 
     // Cards in the players' hand
-    private ArrayList<Card> playerCards;
-    private ArrayList<Card> aiCards;
+    private ArrayList<Card> playerHand;
+    private ArrayList<Card> aiHand;
 
     // Captured cards by players
     private ArrayList<Card> playerCapturedCards;
@@ -21,11 +25,13 @@ public class GameState {
     private int playerScore;
     private int aiScore;
 
+    private EnumMap<PointType, EarnedBy> pointWinners;
+
     // Constructor
     public GameState() {
         tableCards = new ArrayList<>();
-        playerCards = new ArrayList<>();
-        aiCards = new ArrayList<>();
+        playerHand = new ArrayList<>();
+        aiHand = new ArrayList<>();
         playerCapturedCards = new ArrayList<>();
         aiCapturedCards = new ArrayList<>();
         playerScore = 0;
@@ -33,24 +39,16 @@ public class GameState {
     }
 
     // Methods
-    public void addPlayerScore(int pointsToAdd) {
-        playerScore += pointsToAdd;
-    }
-
-    public void addAiScore(int pointsToAdd) {
-        aiScore += pointsToAdd;
-    }
-
     public void clearTableCards() {
         tableCards.clear();
     }
 
     public void clearPlayerHand() {
-        playerCards.clear();
+        playerHand.clear();
     }
 
     public void clearAiHand() {
-        aiCards.clear();
+        aiHand.clear();
     }
 
     public void clearPlayerCapturedCards() {
@@ -73,17 +71,29 @@ public class GameState {
         aiScore = 0;
     }
 
+    public void addPlayerScore(int pointsToAdd) {
+        playerScore += pointsToAdd;
+    }
+
+    public void addAiScore(int pointsToAdd) {
+        aiScore += pointsToAdd;
+    }
+
+    public void resetPointWinners() {
+        pointWinners = new EnumMap<>(PointType.class);
+    }
+
     // Getter
     public ArrayList<Card> getTableCards() {
         return tableCards;
     }
 
     public ArrayList<Card> getPlayerHand() {
-        return playerCards;
+        return playerHand;
     }
 
     public ArrayList<Card> getAiHand() {
-        return aiCards;
+        return aiHand;
     }
 
     public ArrayList<Card> getPlayerCapturedCards() {
@@ -110,17 +120,21 @@ public class GameState {
         return aiScore;
     }
 
+    public EnumMap<PointType, EarnedBy> getPointWinners() {
+        return pointWinners;
+    }
+
     // Setter
-    public void setTableCards(ArrayList<Card> cardsOnTable) {
-        tableCards = cardsOnTable;
+    public void setTableCards(ArrayList<Card> tableCards) {
+        this.tableCards = tableCards;
     }
 
     public void setPlayerHand(ArrayList<Card> playerHand) {
-        playerCards = playerHand;
+        this.playerHand = playerHand;
     }
 
     public void setAiHand(ArrayList<Card> aiHand) {
-        aiCards = aiHand;
+        this.aiHand = aiHand;
     }
 
     public void setPlayerCapturedCards(ArrayList<Card> playerCapturedCards) {
@@ -145,5 +159,9 @@ public class GameState {
 
     public void setAiScore(int aiScore) {
         this.aiScore = aiScore;
+    }
+
+    public void setPointWinners(PointType type, EarnedBy winner) {
+        pointWinners.put(type, winner);
     }
 }

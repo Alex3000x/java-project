@@ -44,7 +44,7 @@ public class GameLogger {
     }
 
     public static void logEndGameMenu() {
-        System.out.println("*---------------- END GAME MENU ----------------*");
+        System.out.println("*------------------------------------------------- END GAME MENU ---------------------------------------------------*");
         System.out.println("1) Play another match");
         System.out.println("2) View match statistics");
         System.out.println("3) Return to main menu");
@@ -55,7 +55,7 @@ public class GameLogger {
     }
 
     public static void logAction(String message, int newlines) {
-        System.out.print("►" + message);
+        System.out.print(">" + message);
         for(int i = 0; i < newlines; i++) { System.out.print("\n"); }
     }
 

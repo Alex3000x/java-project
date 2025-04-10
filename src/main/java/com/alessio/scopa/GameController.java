@@ -1,10 +1,13 @@
 package com.alessio.scopa;
 
+import com.alessio.scopa.enums.EarnedBy;
+import com.alessio.scopa.enums.PointType;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class GameController {
     private final GameState gameState; // The state of the game
+    private final GameStatistics gameStatistics; // The final statistic of the game
     private final InputManager inputManager;    // For the quit choice in every input
     private static final Scanner inputPlayer = new Scanner(System.in);
     private static int winningScore = 11; // Default value, can be changed if needed
@@ -19,6 +22,7 @@ public class GameController {
     // Constructor
     public GameController() {
         this.gameState = new GameState();
+        this.gameStatistics = new GameStatistics();
         this.inputManager = new InputManager(inputPlayer, this);
     }
 
@@ -118,6 +122,7 @@ public class GameController {
         gameState.resetLastCaptureByPlayer();
         gameState.resetPlayerScore();
         gameState.resetAiScore();
+        gameStatistics.resetStatistics();
     }
 
     // Initializes a new round by shuffling the deck and dealing cards to players and on the table
@@ -176,11 +181,11 @@ public class GameController {
             if (isPlayerTurn) {
                 Card selectedPlayerCard = selectPlayerCard(); // Card selection from player
                 if (quitToMenu) break;
-                GameLogger.logMessage(gameState.getPlayerName(), "choose to play the " + selectedPlayerCard, 1);
+                GameLogger.logMessage(gameState.getPlayerName(), "chooses to play the " + selectedPlayerCard, 1);
                 playerMove(selectedPlayerCard);
             } else {
                 Card selectedAiCard = chooseAiCard(); // Card selection from AI
-                GameLogger.logMessage("AI", "choose to play the " + selectedAiCard, 1);
+                GameLogger.logMessage("AI", "chooses to play the " + selectedAiCard, 1);
                 aiMove(selectedAiCard);
             }
             GameLogger.logNewline(1);
@@ -190,6 +195,7 @@ public class GameController {
             if (isRoundEnded()) {
                 endRound();
                 calculatePoints(); // Calculates points at the end of every round
+                gameStatistics.updateRoundStatistics(gameState);
             } else {
                 isPlayerTurn = !isPlayerTurn; // Switch to the next turn (player's turn)
             }
@@ -538,6 +544,7 @@ public class GameController {
         gameState.clearPlayerCapturedCards();
         gameState.clearAiCapturedCards();
         gameState.resetLastCaptureByPlayer();
+        gameState.resetPointWinners();
     }
 
     // Calculates points at the end of the round
@@ -558,12 +565,14 @@ public class GameController {
         GameLogger.logPrint(" -Majority of cards owned by");
         if (playerCards.size() > aiCards.size()) {
             playerScore++;
+            gameState.setPointWinners(PointType.CARDS, EarnedBy.PLAYER);
             GameLogger.logPoint(gameState.getPlayerName());
         } else if (aiCards.size() == playerCards.size()) {
-
+            gameState.setPointWinners(PointType.CARDS, EarnedBy.NONE);
             GameLogger.logNoPoint();
         } else {
             aiScore++;
+            gameState.setPointWinners(PointType.CARDS, EarnedBy.AI);
             GameLogger.logPoint("AI");
         }
         GameLogger.logPrint(" --> (" + gameState.getPlayerName() +": " + playerCards.size() + " | AI: " + aiCards.size() + ")\n");
@@ -575,12 +584,14 @@ public class GameController {
         GameLogger.logPrint(" -Majority of Coins suit cards owned by");
         if (playerCoins > aiCoins) {
             playerScore++;
+            gameState.setPointWinners(PointType.COINS, EarnedBy.PLAYER);
             GameLogger.logPoint(gameState.getPlayerName());
         } else if (playerCoins == aiCoins) {
-
+            gameState.setPointWinners(PointType.COINS, EarnedBy.NONE);
             GameLogger.logNoPoint();
         } else {
             aiScore++;
+            gameState.setPointWinners(PointType.COINS, EarnedBy.AI);
             GameLogger.logPoint("AI");
         }
         GameLogger.logPrint(" --> (" + gameState.getPlayerName() + ": " + playerCoins + " | AI: " + aiCoins + ")\n");
@@ -591,9 +602,11 @@ public class GameController {
         GameLogger.logPrint(" -Settebello (Seven of Coins) owned by");
         if (playerHasSettebello) {
             playerScore++;
+            gameState.setPointWinners(PointType.SETTEBELLO, EarnedBy.PLAYER);
             GameLogger.logPoint(gameState.getPlayerName());
         } else {
             aiScore++;
+            gameState.setPointWinners(PointType.SETTEBELLO, EarnedBy.AI);
             GameLogger.logPoint("AI");
         }
         GameLogger.logNewline(1);
@@ -607,11 +620,14 @@ public class GameController {
         GameLogger.logPrint(" -Best prime owned by");
         if (playerPrime > aiPrime) {
             playerScore++;
+            gameState.setPointWinners(PointType.PRIME, EarnedBy.PLAYER);
             GameLogger.logPoint(gameState.getPlayerName());
         } else if (aiPrime == playerPrime) {
-            aiScore++;
+            gameState.setPointWinners(PointType.PRIME, EarnedBy.NONE);
             GameLogger.logNoPoint();
         } else {
+            aiScore++;
+            gameState.setPointWinners(PointType.PRIME, EarnedBy.AI);
             GameLogger.logPoint("AI");
         }
         GameLogger.logPrint("\n\t\t\t(" + gameState.getPlayerName() + ": " + playerPrime + " with these " + playerPrimeCards + ")\n\t\t\t(AI: " + aiPrime + " with these " + aiPrimeCards + ")\n");
@@ -702,8 +718,7 @@ public class GameController {
             switch (choice) {
                 case "1" -> playAgainVariable = playAgainOption(); // Set the variable to say if player chosen a rematch
                 case "2" -> {
-                    //displayFinalStatistic(); // Print final statistic method
-                    GameLogger.logAction("There will be the statistics.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.\nStatistics sample.", 2);
+                    gameStatistics.showFinalStatistics(gameState.getPlayerName()); // Print final statistic method
                     do {
                         choice = inputManager.readLineWithQuit(gameState.getPlayerName(), "-Digit 'back' to return to the menu: ");
                     } while (!Objects.equals(choice, "back"));
