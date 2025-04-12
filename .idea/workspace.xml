@@ -7,7 +7,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e865b6eb-7b0e-433f-9733-7864d9ee3c3c" name="Changes" comment="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState.">
+    <list default="true" id="e865b6eb-7b0e-433f-9733-7864d9ee3c3c" name="Changes" comment="Added detailed end-of-match statistics for both player and AI&#10;- Introduced `GameStatistics` class to accumulate match data across rounds with `updateRoundStatistics()` method and shows them with `showFinalStatistics()` method&#10;- Created `PointType` and `EarnedBy` enums to track point origins and owners  &#10;- Final match summary includes:&#10;    • Total rounds played&#10;    • Final score with detailed breakdown (cards, coins, settebello, prime)&#10;    • Number of scopas&#10;    • Total cards and coins captured&#10;    • Capture percentage&#10;- Updated `GameController` and `GameState` accordingly to manage the `EnumMap&lt;PointType, EarnedBy&gt; pointWinners` and save point owners&#10;- Improved formatting and structure of end-game output in `GameLogger` for better clarity">
+      <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/checksums/checksums.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/dependencies-accessors/dependencies-accessors.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/dependencies-accessors/dependencies-accessors.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/executionHistory/executionHistory.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.5.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.5.1/fileHashes/fileHashes.bin" afterDir="false" />
@@ -16,11 +18,9 @@
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/Combinazioni.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/GameState.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/GameState.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/build/classes/java/main/com/alessio/scopa/Main.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" afterPath="$PROJECT_DIR$/build/tmp/compileJava/previous-compilation-data.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/alessio/scopa/Combinazioni.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +36,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Enum" />
       </list>
     </option>
   </component>
@@ -69,14 +70,16 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/IdeaProjects/java-project&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/aless/IdeaProjects/java-project&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.language&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
@@ -89,6 +92,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\aless\IdeaProjects\java-project" />
       <recent name="C:\Users\aless\IdeaProjects\java-project\src\main\java\com\alessio\scopa" />
       <recent name="C:\Users\aless\IdeaProjects\java-project\src\main\resources" />
     </key>
@@ -133,6 +137,8 @@
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.alessio.scopa.Main" />
       <module name="java-project.main" />
+      <option name="PROGRAM_PARAMETERS" value="--stacktrace" />
+      <option name="VM_PARAMETERS" value="-ea" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.alessio.scopa.*" />
@@ -156,11 +162,18 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Application.Carta" />
+      <item itemvalue="Application.CartaTest" />
+      <item itemvalue="Application.GameController" />
+      <item itemvalue="Application.Main" />
+      <item itemvalue="Application.Mazzo" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Main" />
         <item itemvalue="Application.GameController" />
         <item itemvalue="Application.Mazzo" />
-        <item itemvalue="Application.Main" />
         <item itemvalue="Application.Carta" />
         <item itemvalue="Application.CartaTest" />
       </list>
@@ -199,7 +212,17 @@
       <workItem from="1739635440828" duration="13684000" />
       <workItem from="1739897625963" duration="3939000" />
       <workItem from="1740072663986" duration="6308000" />
-      <workItem from="1740260215823" duration="424000" />
+      <workItem from="1740260215823" duration="476000" />
+      <workItem from="1742645992013" duration="1163000" />
+      <workItem from="1742815433515" duration="8068000" />
+      <workItem from="1742926878622" duration="1810000" />
+      <workItem from="1743076108248" duration="3236000" />
+      <workItem from="1743268356996" duration="15107000" />
+      <workItem from="1743351385617" duration="11748000" />
+      <workItem from="1743428527869" duration="13335000" />
+      <workItem from="1743443596722" duration="458000" />
+      <workItem from="1743866436781" duration="12072000" />
+      <workItem from="1744278992550" duration="11584000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <created>1737395269960</created>
@@ -320,7 +343,49 @@
       <option name="project" value="LOCAL" />
       <updated>1740260634148</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Update of build/gradle file">
+      <created>1740260662276</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1740260662276</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Updated logs to display the chosen name instead of a generic &quot;PLAYER&quot;">
+      <created>1742817605928</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1742817605929</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Added game start menu and randomized dealer selection&#10;- Implemented a main menu in Main.java to allow the player to start the game or exit;&#10;- Added the random card draw mechanic at game start to determine the dealer and which player begins;&#10;- Added the drawCard by index method in Deck.java&#10;- Updated logs to display the chosen name instead of a generic &quot;PLAYER&quot;;">
+      <created>1742823374952</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1742823374952</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Add &quot;quit to menu&quot; feature and input handling improvements&#10;&#10;- Introduced &quot;quit&quot; command to allow players to leave the game and return to the main menu during input phases.&#10;  - Added `quitToMenu` flag and `setQuitToMenu()` method in GameController&#10;  - Refactored `selectPlayerCard()` and `determineDealer()` to support quit command, updated `playerMove()`&#10;  - Adjusted Main.java to restart or terminate the game properly based on quit detection&#10;&#10;- Created new `InputManager` class to centralize input logic&#10;  - Provides method `readLineWithQuit()` that safely handles input with escape option&#10;&#10;- Improved `determineDealer()` logic:&#10;  - Fixed index bug (using input value as index in player's choice)&#10;  - Added randomized draw selection for AI instead of always selecting the first card">
+      <created>1743286918617</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1743286918617</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Refactor Game Flow &amp; Introduce Endgame Menu&#10;- Introduced end-of-game menu in `GameController.java` with options:&#10;  • Replay a new match (or not)&#10;  • Return to main menu&#10;  • View match statistics (placeholder for now)&#10;- Moved final match options into `showEndGameMenu()` for better separation of concerns&#10;- Added `playAgainVariable` boolean flag to manage loop control in `startGame()` instead of returning from within the option method&#10;- Handled match ties by increasing `winningScore` dynamically if both players reach the same final score (I thought it was already done right)&#10;- Refactored input reading in confirmation rematch prompts using `nextLine()` instead of `next()` to avoid newline consumption issues&#10;- Minor aesthetic improvements across `GameLogger.java`, `Main.java`, `InputManager.java`, and `GameState.java` to enhance terminal UI consistency&#10;- Removed final modifier from `winningScore` to allow dynamic updates in special tie cases (don't know if it's correct to)&#10;- Introduced scaffolding for match statistics section, to be completed in future updates&#10;- Ensured clean round reset and loop continuity">
+      <created>1743442231106</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1743442231106</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Added detailed end-of-match statistics for both player and AI&#10;- Introduced `GameStatistics` class to accumulate match data across rounds with `updateRoundStatistics()` method and shows them with `showFinalStatistics()` method&#10;- Created `PointType` and `EarnedBy` enums to track point origins and owners  &#10;- Final match summary includes:&#10;    • Total rounds played&#10;    • Final score with detailed breakdown (cards, coins, settebello, prime)&#10;    • Number of scopas&#10;    • Total cards and coins captured&#10;    • Capture percentage&#10;- Updated `GameController` and `GameState` accordingly to manage the `EnumMap&lt;PointType, EarnedBy&gt; pointWinners` and save point owners&#10;- Improved formatting and structure of end-game output in `GameLogger` for better clarity">
+      <created>1744290311947</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1744290311947</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -341,7 +406,6 @@
     <MESSAGE value="First commit" />
     <MESSAGE value="Translated in english other terms and names remained in italian; in GameState added missing methods/getter/setter necessary for the operation of GameController" />
     <MESSAGE value="Removed JFrame and Listener libraries/dependencies;&#10;Added constructor and private methods for:&#10;1. Starting the game (startGame),&#10;2. Distribution cards (dealCards...),&#10;3. Round and turn management between player and computer (playRound/playerMove/aiMove),&#10;4. Basic logic of possible catches (findPossibleCaptures),&#10;5. Round end (checkRoundEnd/endRound),&#10;6. Log, print and main test methods for debugging.&#10;&#10;P.S. Currently no point calculation, no player choice and no AI logic implemented" />
-    <MESSAGE value="Update of build/gradle file" />
     <MESSAGE value="Added a generic method for the player and AI move and removed the duplication; optimized print and log messages to reduce repetitions" />
     <MESSAGE value="Added method to allow the choice of card to the player;&#10;Added method of wait to emulate game timing;&#10;Small corrections to log messages" />
     <MESSAGE value="Added method that implements a more intelligent AI decision logic based on some priorities in the choice of card to play" />
@@ -355,6 +419,24 @@
     <MESSAGE value="Added winner announcement and rematch/quit option in endgame&#10;&#10;- Implemented announceWinner() to display the final scores and declare the winner;&#10;- Added playAgainOption() to allow the player to choose between replaying or exiting after the game ends;&#10;- Updated startGame() to loop and reset the game state if the player chooses to play again;&#10;- Added resetGame() method to reset the current game, including scores, to play a new game." />
     <MESSAGE value="Optimized getBestCaptureForCard() by replacing the unnecessary new ArrayList instance with the clear method on the same list" />
     <MESSAGE value="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added player name customization at game start&#10;&#10;- Introduced an input prompt at the beginning of the game to set the player's name;&#10;- Stored the player's name in GameState." />
+    <MESSAGE value="Update of build/gradle file" />
+    <MESSAGE value="Updated logs to display the chosen name instead of a generic &quot;PLAYER&quot;" />
+    <MESSAGE value="Added game start menu and randomized dealer selection&#10;- Implemented a main menu in Main.java to allow the player to start the game or exit;&#10;- Added the random card draw mechanic at game start to determine the dealer and which player begins;&#10;- Added the drawCard by index method in Deck.java&#10;- Updated logs to display the chosen name instead of a generic &quot;PLAYER&quot;;" />
+    <MESSAGE value="Add &quot;quit to menu&quot; feature and input handling improvements&#10;&#10;- Introduced &quot;quit&quot; command to allow players to leave the game and return to the main menu during input phases.&#10;  - Added `quitToMenu` flag and `setQuitToMenu()` method in GameController&#10;  - Refactored `selectPlayerCard()` and `determineDealer()` to support quit command, updated `playerMove()`&#10;  - Adjusted Main.java to restart or terminate the game properly based on quit detection&#10;&#10;- Created new `InputManager` class to centralize input logic&#10;  - Provides method `readLineWithQuit()` that safely handles input with escape option&#10;&#10;- Improved `determineDealer()` logic:&#10;  - Fixed index bug (using input value as index in player's choice)&#10;  - Added randomized draw selection for AI instead of always selecting the first card" />
+    <MESSAGE value="Refactor Game Flow &amp; Introduce Endgame Menu&#10;- Introduced end-of-game menu in `GameController.java` with options:&#10;  • Replay a new match (or not)&#10;  • Return to main menu&#10;  • View match statistics (placeholder for now)&#10;- Moved final match options into `showEndGameMenu()` for better separation of concerns&#10;- Added `playAgainVariable` boolean flag to manage loop control in `startGame()` instead of returning from within the option method&#10;- Handled match ties by increasing `winningScore` dynamically if both players reach the same final score (I thought it was already done right)&#10;- Refactored input reading in confirmation rematch prompts using `nextLine()` instead of `next()` to avoid newline consumption issues&#10;- Minor aesthetic improvements across `GameLogger.java`, `Main.java`, `InputManager.java`, and `GameState.java` to enhance terminal UI consistency&#10;- Removed final modifier from `winningScore` to allow dynamic updates in special tie cases (don't know if it's correct to)&#10;- Introduced scaffolding for match statistics section, to be completed in future updates&#10;- Ensured clean round reset and loop continuity" />
+    <MESSAGE value="Added detailed end-of-match statistics for both player and AI&#10;- Introduced `GameStatistics` class to accumulate match data across rounds with `updateRoundStatistics()` method and shows them with `showFinalStatistics()` method&#10;- Created `PointType` and `EarnedBy` enums to track point origins and owners  &#10;- Final match summary includes:&#10;    • Total rounds played&#10;    • Final score with detailed breakdown (cards, coins, settebello, prime)&#10;    • Number of scopas&#10;    • Total cards and coins captured&#10;    • Capture percentage&#10;- Updated `GameController` and `GameState` accordingly to manage the `EnumMap&lt;PointType, EarnedBy&gt; pointWinners` and save point owners&#10;- Improved formatting and structure of end-game output in `GameLogger` for better clarity" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added detailed end-of-match statistics for both player and AI&#10;- Introduced `GameStatistics` class to accumulate match data across rounds with `updateRoundStatistics()` method and shows them with `showFinalStatistics()` method&#10;- Created `PointType` and `EarnedBy` enums to track point origins and owners  &#10;- Final match summary includes:&#10;    • Total rounds played&#10;    • Final score with detailed breakdown (cards, coins, settebello, prime)&#10;    • Number of scopas&#10;    • Total cards and coins captured&#10;    • Capture percentage&#10;- Updated `GameController` and `GameState` accordingly to manage the `EnumMap&lt;PointType, EarnedBy&gt; pointWinners` and save point owners&#10;- Improved formatting and structure of end-game output in `GameLogger` for better clarity" />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="GradleRunConfiguration">
+        <watch expression="totalScopaAI" language="JAVA" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/java_project$Main.ic" NAME="Main Coverage Results" MODIFIED="1742820343238" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>com.alessio.scopa.*</FILTER>
+    </SUITE>
   </component>
 </project>
